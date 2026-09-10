@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#8b6bb8">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>경북 상주 국내아웃리치</title>
+<style>
+  :root{
+    --brand:#8b6bb8; --brand-deep:#6c4c99; --brand-soft:#f2ecfa;
+    --ink:#2b2b30; --ink-soft:#6a6a74; --line:#ececf0;
+    --bg:#f6f6f8; --card:#ffffff; --radius:18px;
+    --shadow:0 8px 30px rgba(30,20,10,.08);
+    --ok:#2e9e5b; --ok-soft:#e8f8ee;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+  html,body{margin:0;padding:0;}
+  body{
+    font-family:'Malgun Gothic','맑은 고딕',-apple-system,BlinkMacSystemFont,'Apple SD Gothic Neo',sans-serif;
+    background:var(--bg); color:var(--ink); line-height:1.6;
+    -webkit-font-smoothing:antialiased; padding-bottom:24px;
+  }
+  .wrap{max-width:620px;margin:0 auto;padding:0 14px;}
+
+  .hero{
+    background:linear-gradient(135deg,var(--brand) 0%,var(--brand-deep) 100%);
+    color:#fff; border-radius:0 0 26px 26px; padding:20px 18px 22px;
+    box-shadow:var(--shadow); position:relative;
+  }
+  .hero .top{display:flex;justify-content:space-between;align-items:flex-start;}
+  .hero .eyebrow{font-size:12.5px;opacity:.9;letter-spacing:.5px;margin-bottom:4px;}
+  .hero .title{font-size:21px;font-weight:800;letter-spacing:-.3px;}
+  .hero .sub{margin-top:6px;font-size:13.5px;opacity:.92;}
+  .gearbtn{background:rgba(255,255,255,.18);border:none;color:#fff;width:34px;height:34px;border-radius:10px;font-size:16px;cursor:pointer;flex:none;}
+
+  .tabbar{display:flex;overflow-x:auto;gap:6px;padding:12px 14px 0;max-width:620px;margin:0 auto;scrollbar-width:none;}
+  .tabbar::-webkit-scrollbar{display:none;}
+  .tabbtn{flex:none;padding:9px 14px;border-radius:20px;border:1.5px solid var(--line);background:#fff;color:var(--ink-soft);font-size:13.5px;font-weight:700;cursor:pointer;white-space:nowrap;}
+  .tabbtn.active{background:var(--brand);border-color:var(--brand);color:#fff;}
+
+  .panel{display:none;}
+  .panel.active{display:block;}
+
+  .card{background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);padding:16px 16px 18px;margin-top:14px;}
+  .card-head{display:flex;align-items:center;gap:8px;margin-bottom:10px;}
+  .card-head .dot{width:7px;height:20px;border-radius:6px;background:var(--brand);flex:none;}
+  .card-head h2{margin:0;font-size:15.5px;font-weight:800;}
+
+  /* 행사 타임라인 */
+  .tline{list-style:none;margin:0;padding:0;}
+  .tline li{display:flex;gap:12px;padding:9px 0;border-bottom:1px dashed var(--line);}
+  .tline li:last-child{border-bottom:none;}
+  .tline .tm{flex:none;width:52px;font-weight:800;color:var(--brand-deep);font-size:13.5px;padding-top:1px;}
+  .tline .tx b{font-size:14.5px;} .tline .tx small{display:block;color:var(--ink-soft);font-size:12.5px;margin-top:1px;}
+
+  .noticelist{list-style:none;margin:0;padding:0;font-size:13.5px;color:var(--ink-soft);}
+  .noticelist li{padding:6px 0 6px 16px;position:relative;}
+  .noticelist li::before{content:"▸";position:absolute;left:0;color:var(--brand);}
+
+  /* 계획: 역할카드 */
+  .rolegrid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+  .rolecard{border:1px solid var(--line);border-radius:14px;padding:11px 12px;background:#fafafb;}
+  .rolecard .rc-top{display:flex;align-items:center;gap:7px;margin-bottom:4px;}
+  .rolecard .rc-dot{width:10px;height:10px;border-radius:50%;flex:none;}
+  .rolecard b{font-size:13.5px;}
+  .rolecard p{margin:0;font-size:12.3px;color:var(--ink-soft);line-height:1.45;}
+
+  /* 배치 */
+  .busbox{border:1px solid var(--line);border-radius:14px;padding:12px 14px;margin-bottom:10px;background:#fafafb;}
+  .busbox b{font-size:14.5px;color:var(--brand-deep);}
+  .busbox div{font-size:13px;color:var(--ink-soft);margin-top:3px;}
+  .zonetable{width:100%;border-collapse:collapse;font-size:13px;}
+  .zonetable th,.zonetable td{border-bottom:1px solid var(--line);padding:7px 6px;text-align:left;}
+  .zonetable th{color:var(--ink-soft);font-weight:700;font-size:12.5px;}
+  .mapimg{width:100%;border-radius:12px;margin-top:6px;display:block;}
+
+  /* 신청자 */
+  .grouptitle{font-size:13.5px;font-weight:800;color:var(--brand-deep);margin:14px 0 6px;}
+  .grouptitle:first-child{margin-top:0;}
+  .namechip{display:inline-block;background:var(--brand-soft);color:var(--brand-deep);border-radius:8px;padding:5px 9px;font-size:12.8px;font-weight:700;margin:0 5px 5px 0;}
+  .totalline{margin-top:14px;padding-top:10px;border-top:1px dashed var(--line);font-size:13.5px;font-weight:800;text-align:right;color:var(--brand-deep);}
+
+  /* 초대(체크리스트) */
+  .teampick{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px;}
+  .teamchip{padding:8px 12px;border-radius:16px;border:1.5px solid var(--line);background:#fff;font-size:12.8px;font-weight:700;color:var(--ink-soft);cursor:pointer;}
+  .teamchip.active{background:var(--brand-deep);border-color:var(--brand-deep);color:#fff;}
+  .searchbox{width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:12px;font-size:14.5px;margin-bottom:10px;font-family:inherit;}
+  .progressbar{display:flex;justify-content:space-between;align-items:center;font-size:13px;color:var(--ink-soft);margin-bottom:10px;}
+  .progressbar b{color:var(--brand-deep);font-size:15px;}
+  .refreshbtn{background:none;border:none;color:var(--brand-deep);font-weight:700;font-size:12.8px;cursor:pointer;}
+  .plist{list-style:none;margin:0;padding:0;}
+  .prow{display:flex;align-items:center;gap:10px;padding:11px 4px;border-bottom:1px solid var(--line);}
+  .prow:last-child{border-bottom:none;}
+  .prow .pinfo{flex:1;}
+  .prow .pname{font-size:15px;font-weight:700;}
+  .prow .pmeta{font-size:12px;color:var(--ink-soft);margin-top:2px;}
+  .chkbtn{flex:none;width:60px;height:34px;border-radius:10px;border:1.5px solid var(--line);background:#fff;color:var(--ink-soft);font-weight:800;font-size:12.8px;cursor:pointer;}
+  .chkbtn.on{background:var(--ok-soft);border-color:var(--ok);color:var(--ok);}
+  .addpersonbtn{width:100%;margin-top:12px;padding:11px;border:1.5px dashed var(--brand);background:var(--brand-soft);color:var(--brand-deep);border-radius:12px;font-weight:700;font-size:13.5px;cursor:pointer;}
+  .apinote{font-size:12px;color:var(--ink-soft);background:#fff8e6;border:1px solid #ffe6a8;border-radius:10px;padding:8px 10px;margin-bottom:10px;}
+
+  /* 예배 */
+  .worshiptable{width:100%;border-collapse:collapse;font-size:13.5px;margin-bottom:8px;}
+  .worshiptable td{padding:8px 6px;border-bottom:1px dashed var(--line);vertical-align:top;}
+  .worshiptable td:first-child{width:64px;font-weight:800;color:var(--brand-deep);}
+  .worshiptable td:last-child{width:78px;color:var(--ink-soft);font-size:12.5px;text-align:right;}
+  .versebox{background:var(--brand-soft);border-radius:12px;padding:12px 14px;font-size:13px;color:#5a4a72;line-height:1.6;margin-top:6px;}
+  .scoregallery img{width:100%;border-radius:12px;margin-bottom:10px;cursor:zoom-in;box-shadow:var(--shadow);}
+
+  .modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.8);display:none;align-items:center;justify-content:center;z-index:100;padding:16px;}
+  .modal-bg.show{display:flex;}
+  .modal-bg img{max-width:100%;max-height:100%;border-radius:10px;}
+
+  .sheet-bg{position:fixed;inset:0;background:rgba(0,0,0,.4);opacity:0;pointer-events:none;transition:.2s;z-index:90;}
+  .sheet-bg.show{opacity:1;pointer-events:auto;}
+  .sheet{position:fixed;left:0;right:0;bottom:0;z-index:91;background:#fff;border-radius:20px 20px 0 0;padding:16px 18px calc(20px + env(safe-area-inset-bottom));transform:translateY(110%);transition:.25s cubic-bezier(.2,.8,.2,1);max-width:620px;margin:0 auto;}
+  .sheet.show{transform:translateY(0);}
+  .sheet h3{margin:0 0 10px;font-size:15px;}
+  .sheet input{width:100%;padding:11px 12px;border:1px solid var(--line);border-radius:10px;font-size:14.5px;margin-bottom:8px;font-family:inherit;}
+  .sheet .row{display:flex;gap:8px;}
+  .sheet button{flex:1;padding:11px;border:none;border-radius:10px;font-weight:800;font-size:14px;cursor:pointer;}
+  .sheet .save{background:var(--brand);color:#fff;}
+  .sheet .cancel{background:#f1f1f4;color:var(--ink);}
+
+  .toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%) translateY(20px);background:#2b2b30;color:#fff;padding:11px 18px;border-radius:24px;font-size:13.5px;font-weight:700;opacity:0;pointer-events:none;transition:.25s;z-index:120;max-width:88%;text-align:center;}
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <div class="wrap top" style="max-width:none;padding:0;">
+    <div>
+      <div class="eyebrow">2026.9.12(토) · 소망교회</div>
+      <div class="title">경북 상주 국내아웃리치</div>
+      <div class="sub">경북 상주시 은척면 하흘 1길 38-11 · 마을잔치</div>
+    </div>
+    <button class="gearbtn" onclick="openSettings()">⚙</button>
+  </div>
+</div>
+
+<div class="tabbar" id="tabbar">
+  <button class="tabbtn" data-tab="event">3.행사</button>
+  <button class="tabbtn" data-tab="plan">4.계획</button>
+  <button class="tabbtn" data-tab="deploy">5.배치</button>
+  <button class="tabbtn" data-tab="applicant">7.신청자</button>
+  <button class="tabbtn" data-tab="invite">9.초대·체크</button>
+  <button class="tabbtn" data-tab="worship">10.예배</button>
+</div>
+
+<div class="wrap">
+
+  <!-- 3. 행사 -->
+  <div class="panel" id="panel-event">
+    <div class="card">
+      <div class="card-head"><span class="dot"></span><h2>행사 일정</h2></div>
+      <ul class="tline" id="eventTimeline"></ul>
+    </div>
+    <div class="card">
+      <div class="card-head"><span class="dot"></span><h2>공지사항</h2></div>
+      <ul class="noticelist" id="eventNotice"></ul>
+    </div>
+  </div>
+
+  <!-- 4. 계획 -->
+  <div class="panel" id="panel-plan">
+    <div class="card">
+      <div class="card-head"><span class="dot"></span><h2>운영 계획 및 팀별 역할</h2></div>
+      <div class="rolegrid" id="roleGrid"></div>
+    </div>
+  </div>
+
+  <!-- 5. 배치 -->
+  <div class="panel" id="panel-deploy">
+    <div class="card">
+      <div class="card-head"><span class="dot"></span><h2>버스 배치</h2></div>
+      <div id="busBoxes"></div>
+    </div>
+    <div class="card">
+      <div class="card-head"><span class="dot"></span><h2>구역(Zone)별 인원 배치</h2></div>
+      <p style="font-size:12px;color:var(--ink-soft);margin-top:-4px;">※ 원본 배치표 인쇄 상태에 따라 일부 수치는 현장 배치표와 다를 수 있어 재확인이 필요합니다.</p>
+      <table class="zonetable">
+        <thead><tr><th>구역</th><th>팀</th><th>인원(약)</th></tr></thead>
+        <tbody id="zoneBody"></tbody>
+      </table>
+    </div>
+    <div class="card">
+      <div class="card-head"><span class="dot"></span><h2>마을잔치 배치도</h2></div>
+      <img class="mapimg" src="assets/배치도.png" alt="배치도" onclick="openImage(this.src)">
+    </div>
+  </div>
+
+  <!-- 7. 신청자 -->
+  <div class="panel" id="panel-applicant">
+    <div class="card">
+      <div class="card-head"><span class="dot"></span><h2>신청자 명단 (다락방별)</h2></div>
+      <div id="applicantList"></div>
+      <div class="totalline" id="applicantTotal"></div>
+    </div>
+  </div>
+
+  <!-- 9. 초대 + 체크 -->
+  <div class="panel" id="panel-invite">
+    <div class="card">
+      <div class="card-head"><span class="dot"></span><h2>초대자(마을주민) 출석 · 방문 체크</h2></div>
+      <div class="apinote" id="apiNote" style="display:none;">아직 서버 주소가 설정되지 않았습니다. 우측 상단 ⚙ 버튼을 눌러 Apps Script 배포 주소를 입력해 주세요.</div>
+      <div class="teampick" id="teamPick"></div>
+      <input class="searchbox" id="searchBox" placeholder="이름으로 검색">
+      <div class="progressbar">
+        <span>체크 현황</span>
+        <span><b id="progNum">0/0</b> <button class="refreshbtn" onclick="loadRoster()">↻ 새로고침</button></span>
+      </div>
+      <ul class="plist" id="peopleList"></ul>
+      <button class="addpersonbtn" onclick="openAddPerson()">+ 명단에 없는 방문객 현장 등록</button>
+    </div>
+    <div class="card">
+      <div class="card-head"><span class="dot"></span><h2>초청자 명단 원본 (총 56명 / 평균연령 74.7세)</h2></div>
+      <p style="font-size:12px;color:var(--ink-soft);">※ 목회자·이장·사모 포함. 최고령 92세(김월임, 엄금자). 위 체크리스트와 동일한 명단입니다.</p>
+    </div>
+  </div>
+
+  <!-- 10. 예배 -->
+  <div class="panel" id="panel-worship">
+    <div class="card">
+      <div class="card-head"><span class="dot"></span><h2>개회예배 순서 (9월 12일 토)</h2></div>
+      <table class="worshiptable" id="worshipTable"></table>
+      <div class="versebox">
+        [성경구절 · 요한복음 9:1-3]<br>
+        1 예수께서 길을 가시다가 날 때부터 눈먼 사람을 만나셨습니다.<br>
+        2 제자들이 예수께 물었습니다. "랍비여, 이 사람이 눈먼 채로 태어난 것이 누구의 죄 때문입니까? 이 사람의 죄 때문입니까, 아니면 그의 부모의 죄 때문입니까?"<br>
+        3 예수께서 대답하셨습니다. "이 사람의 죄도, 그 부모의 죄도 아니다. 그에게서 하나님의 일이 드러나려는 것이다."
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-head"><span class="dot"></span><h2>예배 순서지 · 악보</h2></div>
+      <div class="scoregallery">
+        <img src="assets/예배순서지.png" onclick="openImage(this.src)" alt="예배순서지">
+        <img src="assets/악보_찬양1_주가일하시네.png" onclick="openImage(this.src)" alt="찬양1 주가 일하시네">
+        <img src="assets/악보_찬양2_하나님의부르심.png" onclick="openImage(this.src)" alt="찬양2 하나님의 부르심">
+        <img src="assets/악보_특순_행복.png" onclick="openImage(this.src)" alt="특순 행복">
+        <img src="assets/악보_헌금송_내기도하는그시간.png" onclick="openImage(this.src)" alt="헌금송 내 기도하는 그 시간">
+        <img src="assets/악보_축복송_하나님께서당신을통해.png" onclick="openImage(this.src)" alt="축복송 하나님께서 당신을 통해">
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- 이미지 확대 모달 -->
+<div class="modal-bg" id="imgModal" onclick="this.classList.remove('show')"><img id="modalImg" src=""></div>
+
+<!-- 설정 바텀시트 -->
+<div class="sheet-bg" id="settingsBg" onclick="closeSettings()"></div>
+<div class="sheet" id="settingsSheet">
+  <h3>⚙ 서버 연결 설정</h3>
+  <input id="gasUrlInput" placeholder="Google Apps Script 웹앱 URL (…/exec)">
+  <div class="row">
+    <button class="cancel" onclick="closeSettings()">취소</button>
+    <button class="save" onclick="saveSettings()">저장</button>
+  </div>
+</div>
+
+<!-- 현장등록 바텀시트 -->
+<div class="sheet-bg" id="addBg" onclick="closeAddPerson()"></div>
+<div class="sheet" id="addSheet">
+  <h3>+ 현장 등록</h3>
+  <input id="addName" placeholder="이름">
+  <input id="addAge" placeholder="나이 (선택)">
+  <div class="row">
+    <button class="cancel" onclick="closeAddPerson()">취소</button>
+    <button class="save" onclick="submitAddPerson()">등록</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ===================== 탭 전환 ===================== */
+document.querySelectorAll('.tabbtn').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    document.querySelectorAll('.tabbtn').forEach(b=>b.classList.remove('active'));
+    document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('panel-'+btn.dataset.tab).classList.add('active');
+    if(btn.dataset.tab==='invite') loadRoster();
+  });
+});
+document.querySelector('.tabbtn').classList.add('active');
+document.getElementById('panel-event').classList.add('active');
+
+/* ===================== 3. 행사 데이터 ===================== */
+const EVENT_TIMELINE=[
+  ['06:00','출발','서빙고 온누리교회 앞 주차장'],
+  ['09:00','도착','경북 상주시 소망교회'],
+  ['10:00','예배','소망교회 본당 / 오리엔테이션'],
+  ['11:00','준비','섬김팀별(Zone) 안내·식사·이용·꽃단장·카페·놀이·보수·촬영 전도'],
+  ['11:30','잔치','오병이어팀, 꽃단장팀, 발지압팀, 추나요법팀, 소망카페팀, 소망놀이팀, 소망택배팀'],
+  ['17:00','초대','소망교회 본당 / 폭죽쇼 시간'],
+  ['17:30','마을출발','상주점 다담뜰한식뷔페 (054-533-2118)'],
+  ['18:00','식당도착','저녁식사'],
+  ['19:00','복귀','상주점 다담뜰한식뷔페 출발'],
+  ['21:00','도착','서빙고 온누리교회'],
+];
+const EVENT_NOTICE=[
+  '출발시간 엄수 : 5:40분까지 서빙고 온누리교회 앞 주차장으로 집결',
+  '복장 : 자유복장',
+  '개별 준비 : 긴팔, 점퍼, 정기 복용 약품',
+  '섬김 코너별 팀장님의 인솔에 따라 준비가 진행됨',
+  '어르신들 관련 지원·문의·운영 관련 사항은 본부석에서 확인',
+  '모든 섬김 관련 지원·문의·운영 관련 사항은 본부석에서 확인',
+  '오병이어팀 : 예방(위생) 앞치마 등 준비 필요(고기냄새 배는 옷 착용 권장)',
+  '버스 1호차 담당 주웅현(010-8212-7455) / 버스 2호차 담당 정두식(010-6513-7616) — 탑승자 명단 확인 후 인원 체크',
+];
+document.getElementById('eventTimeline').innerHTML = EVENT_TIMELINE.map(t=>
+  `<li><span class="tm">${t[0]}</span><span class="tx"><b>${t[1]}</b><small>${t[2]}</small></span></li>`).join('');
+document.getElementById('eventNotice').innerHTML = EVENT_NOTICE.map(n=>`<li>${n}</li>`).join('');
+
+/* ===================== 4. 계획 데이터 ===================== */
+const ROLES=[
+  ['#8b6bb8','본부팀 (Z0)','전체 운영·배치·물품 총괄, 사역자 간 소통·조정'],
+  ['#4a90d9','안내팀','안내, 통역, 이름표 배부'],
+  ['#e0a730','오병이어팀','식사 배부, 잔치 음식 준비'],
+  ['#e05a7a','꽃단장팀','염색, 컷, 파마, 세팅펌'],
+  ['#e05a7a','발지압팀','세족 및 발 지압'],
+  ['#e05a7a','추나요법팀','교정, 통증 완화'],
+  ['#2e9e5b','소망카페팀','음료·다과 제공, 사진'],
+  ['#2e9e5b','소망놀이팀','어르신 맞춤 놀이·체험'],
+  ['#d9822b','보수팀','가정집 시설 수리'],
+  ['#d9822b','촬영팀','행사 동영상 및 사진 촬영'],
+  ['#6a6a74','소망택배팀','개별 복음 제시 및 선물 전달'],
+];
+document.getElementById('roleGrid').innerHTML = ROLES.map(r=>
+  `<div class="rolecard"><div class="rc-top"><span class="rc-dot" style="background:${r[0]}"></span><b>${r[1]}</b></div><p>${r[2]}</p></div>`).join('');
+
+/* ===================== 5. 배치 데이터 ===================== */
+document.getElementById('busBoxes').innerHTML = `
+  <div class="busbox"><b>1호차 · 37명</b> (운전원 제외)<div>이보영 010-9115-0939 · 서울72허6384</div><div>담당 : 주웅현</div></div>
+  <div class="busbox"><b>2호차 · 42명</b> (운전원 제외)<div>최유호 010-8633-8777 · 서울72허6382</div><div>담당 : 정두식</div></div>
+`;
+const ZONES=[
+  ['Z0','본부팀','20'],['Z1','안내팀','5'],['Z2','오병이어팀','18'],['Z3','꽃단장팀','24'],
+  ['Z4','발지압팀','7'],['Z5','추나요법팀','5'],['Z6','소망카페팀','9'],['Z7','소망놀이팀','2'],
+  ['Z8','보수팀','5'],['Z9','촬영팀','3'],['Z10','소망택배팀','-'],
+];
+document.getElementById('zoneBody').innerHTML = ZONES.map(z=>`<tr><td>${z[0]}</td><td>${z[1]}</td><td>${z[2]}</td></tr>`).join('');
+
+/* ===================== 7. 신청자 데이터 (다락방별, 총 80명) ===================== */
+const APPLICANTS=[
+  ['공동체', ['노치형 목사']],
+  ['임용 1', ['김미래','김성희','주웅현','서정욱','송경욱','민희정','김영옥','주진혁','오 명','김한식','홍은선','황춘성','정순영','정경희','정두식','이영미','황춘나','이연자']],
+  ['임용 2', ['조계관','김윤경','엄재준','고봉옥','엄호산','이창권','장윤아','이일순','박선영']],
+  ['소망 1', ['박재환','김윤미','지형근','이지연','남관우','구자영','김희정','장혜영','이창배']],
+  ['소망 2', ['최인경','정세정','감미란','박주연','김지은','진선희']],
+  ['사랑 1', ['최재현','박은규','이상우','이은경','임동욱','유덕영','정한기','이상문','장윤지','임소미','배은하','변지숙','박성애(취소)']],
+  ['사랑 2', ['이보윤','김한국','안승립','구예정','이희자','김남정','최황','오영미','박지수','이지영','정은주','유재연','김종중','정영혜','정춘균','이연주','고혜순(취소)','박애우','정기순']],
+  ['타공동체', ['신유순(권사)','김희정(84년생)','김민종·서병이·권대구 (주나요법팀, 자차이용)']],
+  ['기타', ['최국호(버스기사)']],
+];
+document.getElementById('applicantList').innerHTML = APPLICANTS.map(g=>
+  `<div class="grouptitle">${g[0]}</div>` + g[1].map(n=>`<span class="namechip">${n}</span>`).join('')).join('');
+document.getElementById('applicantTotal').textContent = '총 신청 인원 80명';
+
+/* ===================== 10. 예배 데이터 ===================== */
+const WORSHIP=[
+  ['찬양','주가 일하시네 / 하나님의 부르심','이창권 순장'],
+  ['대표기도','','오명 대표장로'],
+  ['성경봉독','요한복음 9장 1절~3절','주웅현 총무'],
+  ['특순','행복','이창권, 주웅현'],
+  ['말씀','한번 더 생각해보세요!','반재복 목사'],
+  ['봉헌찬송','내 기도하는 그 시간(찬송가 482장)','다같이'],
+  ['축도','','노치형 목사'],
+];
+document.getElementById('worshipTable').innerHTML = WORSHIP.map(w=>
+  `<tr><td>${w[0]}</td><td>${w[1]}</td><td>${w[2]}</td></tr>`).join('');
+
+/* ===================== 초대·체크 기능 (Google Apps Script 연동) ===================== */
+const TEAMS = ['안내팀','오병이어팀','꽃단장팀','발지압팀','추나요법팀','소망카페팀','소망놀이팀','촬영팀','소망택배팀'];
+let currentTeam = TEAMS[0];
+let rosterCache = [];
+
+function getGasUrl(){ return localStorage.getItem('gasUrl') || ''; }
+function setGasUrl(v){ localStorage.setItem('gasUrl', v); }
+
+let _jsonpId=0;
+function jsonp(params){
+  const url=getGasUrl();
+  if(!url) return Promise.reject(new Error('no-url'));
+  return new Promise((resolve,reject)=>{
+    const cb='_scb'+(++_jsonpId);
+    const s=document.createElement('script');
+    let done=false;
+    function cleanup(){ try{ delete window[cb]; }catch(_){ window[cb]=undefined; } if(s.parentNode) s.parentNode.removeChild(s); }
+    window[cb]=function(data){ done=true; resolve(data); cleanup(); };
+    const qs=Object.keys(params).map(k=>encodeURIComponent(k)+'='+encodeURIComponent(params[k])).join('&');
+    s.src=url+'?'+qs+'&callback='+cb;
+    s.onerror=function(){ if(!done){ cleanup(); reject(new Error('network')); } };
+    document.body.appendChild(s);
+    setTimeout(()=>{ if(!done){ cleanup(); reject(new Error('timeout')); } },12000);
+  });
+}
+
+document.getElementById('teamPick').innerHTML = TEAMS.map((t,i)=>
+  `<button class="teamchip${i===0?' active':''}" data-team="${t}">${t}${t==='안내팀'?' (출석)':''}</button>`).join('');
+document.getElementById('teamPick').addEventListener('click', e=>{
+  const btn=e.target.closest('.teamchip'); if(!btn) return;
+  document.querySelectorAll('.teamchip').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  currentTeam = btn.dataset.team;
+  renderPeople();
+});
+document.getElementById('searchBox').addEventListener('input', renderPeople);
+
+async function loadRoster(){
+  if(!getGasUrl()){ document.getElementById('apiNote').style.display='block'; return; }
+  document.getElementById('apiNote').style.display='none';
+  try{
+    const res = await jsonp({action:'getRoster'});
+    if(res && res.success){ rosterCache = res.people; renderPeople(); }
+    else showToast('명단을 불러오지 못했습니다.');
+  }catch(err){ showToast('서버 연결 실패 — 설정을 확인해 주세요.'); }
+}
+
+function renderPeople(){
+  const kw = document.getElementById('searchBox').value.trim();
+  const list = rosterCache.filter(p=>!kw || p.name.includes(kw));
+  const checkedCount = rosterCache.filter(p=>p.checks[currentTeam] && p.checks[currentTeam].checked).length;
+  document.getElementById('progNum').textContent = `${checkedCount}/${rosterCache.length}`;
+  document.getElementById('peopleList').innerHTML = list.map(p=>{
+    const c = p.checks[currentTeam] || {checked:false,time:''};
+    return `<li class="prow">
+      <div class="pinfo"><div class="pname">${p.name}${p.age?(' ('+p.age+')'):''}</div>
+      <div class="pmeta">${p.note||''}${c.time?(' · '+c.time):''}</div></div>
+      <button class="chkbtn${c.checked?' on':''}" onclick="toggleCheck(${p.row}, this)">${c.checked ? '완료✓' : (currentTeam==='안내팀'?'출석':'방문')}</button>
+    </li>`;
+  }).join('') || '<li class="prow"><div class="pinfo">표시할 사람이 없습니다.</div></li>';
+}
+
+async function toggleCheck(row, btn){
+  const person = rosterCache.find(p=>p.row===row);
+  if(!person) return;
+  const cur = person.checks[currentTeam] || {checked:false};
+  const next = !cur.checked;
+  btn.disabled = true;
+  try{
+    const res = await jsonp({action:'setCheck', row:row, team:currentTeam, checked: next});
+    if(res && res.success){
+      person.checks[currentTeam] = { checked: next, time: next ? new Date().toLocaleString('ko-KR') : '' };
+      renderPeople();
+    } else showToast('저장 실패');
+  }catch(err){ showToast('네트워크 오류로 저장하지 못했습니다.'); }
+  btn.disabled = false;
+}
+
+/* 현장 등록 */
+function openAddPerson(){ document.getElementById('addBg').classList.add('show'); document.getElementById('addSheet').classList.add('show'); }
+function closeAddPerson(){ document.getElementById('addBg').classList.remove('show'); document.getElementById('addSheet').classList.remove('show'); }
+async function submitAddPerson(){
+  const name = document.getElementById('addName').value.trim();
+  const age = document.getElementById('addAge').value.trim();
+  if(!name){ showToast('이름을 입력해 주세요.'); return; }
+  try{
+    const res = await jsonp({action:'addPerson', name:name, age:age});
+    if(res && res.success){ showToast('등록되었습니다.'); closeAddPerson(); document.getElementById('addName').value=''; document.getElementById('addAge').value=''; loadRoster(); }
+    else showToast('등록 실패');
+  }catch(err){ showToast('네트워크 오류'); }
+}
+
+/* 설정 */
+function openSettings(){
+  document.getElementById('gasUrlInput').value = getGasUrl();
+  document.getElementById('settingsBg').classList.add('show');
+  document.getElementById('settingsSheet').classList.add('show');
+}
+function closeSettings(){
+  document.getElementById('settingsBg').classList.remove('show');
+  document.getElementById('settingsSheet').classList.remove('show');
+}
+function saveSettings(){
+  setGasUrl(document.getElementById('gasUrlInput').value.trim());
+  closeSettings();
+  showToast('저장되었습니다.');
+  loadRoster();
+}
+
+/* 이미지 확대 */
+function openImage(src){ document.getElementById('modalImg').src=src; document.getElementById('imgModal').classList.add('show'); }
+
+/* 토스트 */
+let toastTimer=null;
+function showToast(msg){
+  const t=document.getElementById('toast');
+  t.textContent=msg; t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer=setTimeout(()=>t.classList.remove('show'),2200);
+}
+
+if(!getGasUrl()) document.getElementById('apiNote').style.display='block';
+</script>
+</body>
+</html>
