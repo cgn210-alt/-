@@ -146,9 +146,12 @@
   .versebox{background:var(--brand-soft);border-radius:12px;padding:12px 14px;font-size:13px;color:#5a4a72;line-height:1.6;margin-top:6px;}
   .scoregallery img{width:100%;border-radius:12px;margin-bottom:10px;cursor:zoom-in;box-shadow:var(--shadow);}
 
-  .modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.8);display:none;align-items:center;justify-content:center;z-index:100;padding:16px;}
+  .modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.8);display:none;align-items:center;justify-content:center;z-index:100;padding:16px;overflow:auto;}
   .modal-bg.show{display:flex;}
-  .modal-bg img{max-width:100%;max-height:100%;border-radius:10px;}
+  .modal-bg img{max-width:100%;max-height:100%;border-radius:10px;cursor:zoom-in;transition:max-width .15s,max-height .15s;}
+  .modal-bg.zoomed{align-items:flex-start;justify-content:flex-start;padding:0;}
+  .modal-bg.zoomed img{max-width:none;max-height:none;width:auto;height:auto;border-radius:0;cursor:zoom-out;}
+  .modal-hint{position:fixed;left:50%;bottom:18px;transform:translateX(-50%);background:rgba(0,0,0,.6);color:#fff;font-size:12px;padding:6px 14px;border-radius:20px;z-index:101;pointer-events:none;}
 
   .sheet-bg{position:fixed;inset:0;background:rgba(0,0,0,.4);opacity:0;pointer-events:none;transition:.2s;z-index:90;}
   .sheet-bg.show{opacity:1;pointer-events:auto;}
@@ -301,7 +304,10 @@
 </div>
 
 <!-- 이미지 확대 모달 -->
-<div class="modal-bg" id="imgModal" onclick="this.classList.remove('show')"><img id="modalImg" src=""></div>
+<div class="modal-bg" id="imgModal" onclick="closeImageModal()">
+  <img id="modalImg" src="" onclick="toggleImageZoom(event)">
+  <span class="modal-hint" id="modalHint">이미지를 탭하면 확대/축소됩니다</span>
+</div>
 
 <!-- 설정 바텀시트 -->
 <div class="sheet-bg" id="settingsBg" onclick="closeSettings()"></div>
@@ -663,7 +669,10 @@ const VISIT_TEAMS = TEAMS.filter(t=>t!=='안내팀'); // 방문 체험 대상 9�
 let currentTeam = TEAMS[0];
 let rosterCache = [];
 
-function getGasUrl(){ return localStorage.getItem('gasUrl') || ''; }
+// 기본 서버 주소 — 여기에 직접 넣어두면 사용자가 ⚙ 설정을 건드릴 필요가 없습니다.
+// Apps Script를 "새 배포"(새 버전이 아님)로 다시 배포해서 URL이 바뀐 경우에만 이 값을 수정하세요.
+const DEFAULT_GAS_URL = 'https://script.google.com/macros/s/AKfycbyrQ5FWd8IwTQFP9QZ-GK_YlMw8HeNxRpmz7gBVB_5s5gZOzA6S15xvXce0gdpV9ZME/exec';
+function getGasUrl(){ return localStorage.getItem('gasUrl') || DEFAULT_GAS_URL; }
 function setGasUrl(v){ localStorage.setItem('gasUrl', v); }
 
 let _jsonpId=0;
@@ -816,7 +825,22 @@ function saveSettings(){
 }
 
 /* 이미지 확대 */
-function openImage(src){ document.getElementById('modalImg').src=src; document.getElementById('imgModal').classList.add('show'); }
+function openImage(src){
+  document.getElementById('modalImg').src=src;
+  const modal = document.getElementById('imgModal');
+  modal.classList.remove('zoomed');
+  modal.classList.add('show');
+  document.getElementById('modalHint').style.display='block';
+}
+function closeImageModal(){
+  document.getElementById('imgModal').classList.remove('show','zoomed');
+}
+function toggleImageZoom(e){
+  e.stopPropagation();
+  const modal = document.getElementById('imgModal');
+  modal.classList.toggle('zoomed');
+  if(modal.classList.contains('zoomed')) document.getElementById('modalHint').style.display='none';
+}
 
 /* 토스트 */
 let toastTimer=null;
