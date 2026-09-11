@@ -467,7 +467,7 @@ async function loadDeployment(){
       deployCache = res;
       renderDeployment();
     } else showToast('인원배치 정보를 불러오지 못했습니다.');
-  }catch(err){ showToast('서버 연결 실패 — 설정을 확인해 주세요.'); }
+  }catch(err){ showToast('연결 실패: ' + err.message); }
 }
 
 function renderDeployment(){
@@ -646,10 +646,11 @@ function jsonp(params){
     function cleanup(){ try{ delete window[cb]; }catch(_){ window[cb]=undefined; } if(s.parentNode) s.parentNode.removeChild(s); }
     window[cb]=function(data){ done=true; resolve(data); cleanup(); };
     const qs=Object.keys(params).map(k=>encodeURIComponent(k)+'='+encodeURIComponent(params[k])).join('&');
-    s.src=url+'?'+qs+'&callback='+cb;
-    s.onerror=function(){ if(!done){ cleanup(); reject(new Error('network')); } };
+    const sep = url.includes('?') ? '&' : '?';
+    s.src=url+sep+qs+'&callback='+cb;
+    s.onerror=function(){ if(!done){ const u=s.src; cleanup(); reject(new Error('network 요청 실패 — 주소: '+u)); } };
     document.body.appendChild(s);
-    setTimeout(()=>{ if(!done){ cleanup(); reject(new Error('timeout')); } },12000);
+    setTimeout(()=>{ if(!done){ const u=s.src; cleanup(); reject(new Error('timeout(12초 응답없음) — 주소: '+u)); } },12000);
   });
 }
 
@@ -671,7 +672,7 @@ async function loadRoster(){
     const res = await jsonp({action:'getRoster'});
     if(res && res.success){ rosterCache = res.people; renderPeople(); renderMasterTable(); }
     else showToast('명단을 불러오지 못했습니다.');
-  }catch(err){ showToast('서버 연결 실패 — 설정을 확인해 주세요.'); }
+  }catch(err){ showToast('연결 실패: ' + err.message); }
 }
 
 /* 전체 출석·체험 현황표 (56명 x 전체 팀, 한눈에 보기) */
