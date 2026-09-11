@@ -112,6 +112,8 @@
   .prow.admin{flex-direction:column;align-items:stretch;}
   .prow .pinfo{flex:1;}
   .prow .pname{font-size:15px;font-weight:700;}
+  .pmini{border:1px solid var(--line);background:#fff;border-radius:6px;font-size:11px;padding:1px 6px;margin-left:6px;cursor:pointer;color:var(--brand-deep);vertical-align:middle;}
+  .pmini-del{color:#c0392b;}
   .prow .pmeta{font-size:12px;color:var(--ink-soft);margin-top:2px;}
   .chkbtn{flex:none;width:60px;height:34px;border-radius:10px;border:1.5px solid var(--line);background:#fff;color:var(--ink-soft);font-weight:800;font-size:12.8px;cursor:pointer;}
   .chkbtn.on{background:var(--ok-soft);border-color:var(--ok);color:var(--ok);}
@@ -368,6 +370,19 @@
   <div class="row">
     <button class="cancel" onclick="closeBusEdit()">취소</button>
     <button class="save" onclick="submitBusEdit()">저장</button>
+  </div>
+</div>
+
+<!-- 초대자명단: 이름/오타 수정 바텀시트 (관리자) -->
+<div class="sheet-bg" id="personEditBg" onclick="closePersonEdit()"></div>
+<div class="sheet" id="personEditSheet">
+  <h3>✎ 명단 정보 수정</h3>
+  <input id="personEditName" placeholder="이름">
+  <input id="personEditAge" placeholder="나이 (선택)">
+  <input id="personEditNote" placeholder="비고 (선택)">
+  <div class="row">
+    <button class="cancel" onclick="closePersonEdit()">취소</button>
+    <button class="save" onclick="submitPersonEdit()">저장</button>
   </div>
 </div>
 
@@ -765,9 +780,10 @@ function renderPeople(){
     } else {
       actionHtml = `<button class="chkbtn${c.checked?' on':''}" onclick="toggleCheck(${p.row}, currentTeam, this)">${c.checked ? '완료✓' : (currentTeam==='안내팀'?'출석':'방문')}</button>`;
     }
+    const editBtns = isAdmin ? `<button class="pmini" onclick="openPersonEdit(${p.row})">✎ 수정</button><button class="pmini pmini-del" onclick="adminDeletePerson(${p.row})">✕ 삭제</button>` : '';
     return `<li class="prow${isAdmin?' admin':''}">
       <div class="pinfo">
-        <div class="pname">${p.name}${p.age?(' ('+p.age+')'):''}</div>
+        <div class="pname">${p.name}${p.age?(' ('+p.age+')'):''}${editBtns}</div>
         <div class="pmeta">${p.note||''}${c.time?(' · '+c.time):''}</div>
         <div class="teamprogress">${badges}<span class="tp-count">${doneCount}/${VISIT_TEAMS.length}팀 체험</span></div>
       </div>
@@ -791,6 +807,44 @@ async function toggleCheck(row, team, btn){
     } else showToast('저장 실패');
   }catch(err){ showToast('네트워크 오류로 저장하지 못했습니다.'); }
   if(btn) btn.disabled = false;
+}
+
+/* 관리자: 명단 이름·오타 수정 */
+let personEditRow = null;
+function openPersonEdit(row){
+  const person = rosterCache.find(p=>p.row===row);
+  if(!person) return;
+  personEditRow = row;
+  document.getElementById('personEditName').value = person.name || '';
+  document.getElementById('personEditAge').value = person.age || '';
+  document.getElementById('personEditNote').value = person.note || '';
+  document.getElementById('personEditBg').classList.add('show');
+  document.getElementById('personEditSheet').classList.add('show');
+}
+function closePersonEdit(){
+  document.getElementById('personEditBg').classList.remove('show');
+  document.getElementById('personEditSheet').classList.remove('show');
+}
+async function submitPersonEdit(){
+  const name = document.getElementById('personEditName').value.trim();
+  const age = document.getElementById('personEditAge').value.trim();
+  const note = document.getElementById('personEditNote').value.trim();
+  if(!name){ showToast('이름을 입력해 주세요.'); return; }
+  try{
+    const res = await jsonp({action:'adminEditPerson', row:personEditRow, name:name, age:age, note:note, pw:adminPw});
+    if(res && res.success){ showToast('수정되었습니다.'); closePersonEdit(); loadRoster(); }
+    else showToast(res && res.error ? res.error : '수정 실패');
+  }catch(err){ showToast('네트워크 오류'); }
+}
+async function adminDeletePerson(row){
+  const person = rosterCache.find(p=>p.row===row);
+  if(!person) return;
+  if(!confirm(`"${person.name}"님을 명단에서 완전히 삭제할까요?\n(그동안 체크된 출석·방문 기록도 함께 삭제됩니다)`)) return;
+  try{
+    const res = await jsonp({action:'adminDeletePerson', row:row, pw:adminPw});
+    if(res && res.success){ showToast('삭제되었습니다.'); loadRoster(); }
+    else showToast(res && res.error ? res.error : '삭제 실패');
+  }catch(err){ showToast('네트워크 오류'); }
 }
 
 /* 현장 등록 */

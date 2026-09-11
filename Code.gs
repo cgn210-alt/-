@@ -27,6 +27,8 @@ function doGet(e) {
   if (action === 'getRoster')   return handleGetRoster();
   if (action === 'setCheck')    return handleSetCheck(params);
   if (action === 'addPerson')   return handleAddPerson(params);
+  if (action === 'adminEditPerson')   return handleAdminEditPerson(params);
+  if (action === 'adminDeletePerson') return handleAdminDeletePerson(params);
 
   if (action === 'getDeployment')     return handleGetDeployment();
   if (action === 'adminCheckPw')      return jsonRes({ success: checkAdmin_(params.pw) });
@@ -130,6 +132,42 @@ function handleAddPerson(params) {
     var row = [newNo, name, age, note];
     TEAMS.forEach(function () { row.push(false); row.push(''); });
     sheet.appendRow(row);
+  } finally {
+    lock.releaseLock();
+  }
+  return jsonRes({ success: true });
+}
+
+// ── 관리자: 초대자명단 오타 수정(이름·나이·비고) ──────────────
+function handleAdminEditPerson(params) {
+  if (!checkAdmin_(params.pw)) return jsonRes({ success: false, error: '비밀번호가 올바르지 않습니다.' });
+  var row = parseInt(params.row || '0', 10);
+  if (!row || row < 2) return jsonRes({ success: false, error: '잘못된 행 번호' });
+  var name = String(params.name || '').trim();
+  if (!name) return jsonRes({ success: false, error: '이름 필요' });
+
+  var lock = LockService.getScriptLock();
+  lock.waitLock(10000);
+  try {
+    var sheet = ensureSheet_();
+    sheet.getRange(row, 2, 1, 3).setValues([[name, params.age || '', params.note || '']]);
+  } finally {
+    lock.releaseLock();
+  }
+  return jsonRes({ success: true });
+}
+
+// ── 관리자: 초대자명단에서 삭제 ────────────────────────────────
+function handleAdminDeletePerson(params) {
+  if (!checkAdmin_(params.pw)) return jsonRes({ success: false, error: '비밀번호가 올바르지 않습니다.' });
+  var row = parseInt(params.row || '0', 10);
+  if (!row || row < 2) return jsonRes({ success: false, error: '잘못된 행 번호' });
+
+  var lock = LockService.getScriptLock();
+  lock.waitLock(10000);
+  try {
+    var sheet = ensureSheet_();
+    sheet.deleteRow(row);
   } finally {
     lock.releaseLock();
   }
