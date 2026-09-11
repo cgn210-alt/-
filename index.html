@@ -1001,17 +1001,37 @@ function zReset(withTransition){
 }
 function touchDist(t1,t2){ return Math.hypot(t1.clientX-t2.clientX, t1.clientY-t2.clientY); }
 
+/* 이미지 확대 화면에서 뒤로가기(브라우저/제스처)를 누르면 앱을 벗어나지 않고
+   이미지 확대만 닫히도록, 확대를 열 때 히스토리를 한 칸 쌓아둡니다. */
+let modalHistoryPushed = false;
 function openImage(src){
   const img = document.getElementById('modalImg');
   img.src=src;
   zReset(false);
   document.getElementById('imgModal').classList.add('show');
   document.getElementById('modalHint').style.display='block';
+  if(!modalHistoryPushed){
+    history.pushState({imgModal:true}, '', location.href);
+    modalHistoryPushed = true;
+  }
 }
-function closeImageModal(){
+function hideImageModal(){
   zReset(false);
   document.getElementById('imgModal').classList.remove('show');
 }
+function closeImageModal(){
+  hideImageModal();
+  if(modalHistoryPushed){
+    modalHistoryPushed = false;
+    history.back(); // 열 때 쌓아둔 히스토리를 되돌려서, 다음 뒤로가기가 정상적으로 동작하도록 정리
+  }
+}
+window.addEventListener('popstate', function(){
+  if(document.getElementById('imgModal').classList.contains('show')){
+    modalHistoryPushed = false;
+    hideImageModal();
+  }
+});
 /* 마우스 클릭(데스크톱): 탭 한 번으로 2.2배 확대 ↔ 원래대로 */
 function toggleImageZoom(e){
   e.stopPropagation();
