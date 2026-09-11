@@ -36,6 +36,7 @@ function doGet(e) {
   if (action === 'adminAddMember')    return handleAdminAddMember(params);
   if (action === 'adminRemoveMember') return handleAdminRemoveMember(params);
   if (action === 'adminSetColor')     return handleAdminSetColor(params);
+  if (action === 'adminSetCompanion') return handleAdminSetCompanion(params);
 
   return jsonRes({ success: false, error: 'unknown action' });
 }
@@ -250,8 +251,11 @@ function ensureTeamMemberSheet_() {
   var sheet = ss.getSheetByName(SHEET_TEAMMEMBER);
   if (!sheet) {
     sheet = ss.insertSheet(SHEET_TEAMMEMBER);
-    sheet.appendRow(['팀명', '이름', '팀장여부', '색상']);
+    sheet.appendRow(['팀명', '이름', '팀장여부', '색상', '동행지기여부']);
     sheet.setFrozenRows(1);
+  } else if (String(sheet.getRange(1, 5).getValue()) !== '동행지기여부') {
+    // 기존에 이미 만들어진 시트라면 5번째 열(동행지기여부) 헤더만 보충
+    sheet.getRange(1, 5).setValue('동행지기여부');
   }
   return sheet;
 }
@@ -278,7 +282,7 @@ function handleGetDeployment() {
     return { row: r.row, bus: r.v[0], team: r.v[1], name: r.v[2], leader: r.v[3] === true || r.v[3] === 'TRUE', color: r.v[4] || '' };
   });
   var teamMembers = sheetRows_(ensureTeamMemberSheet_()).map(function (r) {
-    return { row: r.row, team: r.v[0], name: r.v[1], leader: r.v[2] === true || r.v[2] === 'TRUE', color: r.v[3] || '' };
+    return { row: r.row, team: r.v[0], name: r.v[1], leader: r.v[2] === true || r.v[2] === 'TRUE', color: r.v[3] || '', companion: r.v[4] === true || r.v[4] === 'TRUE' };
   });
   return jsonRes({ success: true, busInfo: busInfo, busMembers: busMembers, teamMembers: teamMembers });
 }
@@ -354,6 +358,23 @@ function handleAdminSetColor(p) {
     var sheet = (p.target === 'bus') ? ensureBusMemberSheet_() : ensureTeamMemberSheet_();
     var colIndex = (p.target === 'bus') ? 5 : 4;
     sheet.getRange(row, colIndex).setValue(p.color || '');
+  } finally {
+    lock.releaseLock();
+  }
+  return jsonRes({ success: true });
+}
+
+// ── 관리자: 동행지기 지정/해제 (팀별인원 전용 — 같은 팀 안에서
+//   팀원들의 사역시간·간식제공 등을 챙기는 담당자를 표시) ────────
+function handleAdminSetCompanion(p) {
+  if (!checkAdmin_(p.pw)) return jsonRes({ success: false, error: '비밀번호가 올바르지 않습니다.' });
+  var row = parseInt(p.row || '0', 10);
+  if (!row || row < 2) return jsonRes({ success: false, error: '잘못된 행 번호' });
+  var lock = LockService.getScriptLock();
+  lock.waitLock(10000);
+  try {
+    var sheet = ensureTeamMemberSheet_();
+    sheet.getRange(row, 5).setValue(String(p.value) === 'true');
   } finally {
     lock.releaseLock();
   }

@@ -93,6 +93,9 @@
   .memberchip.leader{font-weight:800;border-color:var(--brand);}
   .memberchip .mc-del{border:none;background:none;color:#c0392b;font-weight:900;cursor:pointer;font-size:12px;padding:0 2px;}
   .memberchip select{border:none;background:none;font-size:11px;color:var(--ink-soft);}
+  .companion-badge{background:#fff3cd;color:#8a6d1f;border-radius:6px;padding:1px 6px;font-size:10.5px;font-weight:800;}
+  .mc-comp{border:none;background:none;font-size:13px;padding:0 2px;cursor:pointer;opacity:.35;}
+  .mc-comp.on{opacity:1;}
   .addmini{margin-top:8px;border:1.5px dashed var(--brand);background:var(--brand-soft);color:var(--brand-deep);border-radius:10px;padding:6px 10px;font-size:12.5px;font-weight:700;cursor:pointer;}
   .busmeta{font-size:13px;color:var(--ink-soft);margin:2px 0;}
   .busmeta b{color:var(--brand-deep);}
@@ -511,8 +514,22 @@ function colorSelectHtml(target, row, current){
     `</select>`;
 }
 function memberChip(target, m){
-  const admin = isAdmin ? `${colorSelectHtml(target, m.row, m.color)}<button class="mc-del" onclick="adminRemoveMember('${target}', ${m.row})">✕</button>` : '';
-  return `<span class="memberchip${m.leader?' leader':''}">${nameColorSpan(m)}${admin}</span>`;
+  const companionBadge = m.companion ? `<span class="companion-badge" title="동행지기 — 같은 팀 안에서 팀원들을 챙기는 담당자">🤝동행지기</span>` : '';
+  const companionBtn = (isAdmin && target==='team')
+    ? `<button class="mc-comp${m.companion?' on':''}" title="동행지기 지정/해제" onclick="toggleCompanion(${m.row}, ${!!m.companion})">🤝</button>` : '';
+  const admin = isAdmin ? `${colorSelectHtml(target, m.row, m.color)}${companionBtn}<button class="mc-del" onclick="adminRemoveMember('${target}', ${m.row})">✕</button>` : '';
+  return `<span class="memberchip${m.leader?' leader':''}">${nameColorSpan(m)}${companionBadge}${admin}</span>`;
+}
+async function toggleCompanion(row, current){
+  try{
+    const res = await jsonp({action:'adminSetCompanion', row:row, value: !current, pw:adminPw});
+    if(res && res.success){
+      const m = deployCache.teamMembers.find(x=>x.row===row);
+      if(m) m.companion = !current;
+      renderDeployment();
+      showToast(!current ? '동행지기로 지정되었습니다.' : '동행지기 지정이 해제되었습니다.');
+    } else showToast(res && res.error ? res.error : '변경 실패');
+  }catch(err){ showToast('네트워크 오류'); }
 }
 
 async function loadDeployment(){
