@@ -15,12 +15,12 @@ var ADMIN_PW = '상주2026';
 var SHEET_BUSINFO = '버스정보';
 var SHEET_BUSMEMBER = '버스인원';
 var SHEET_TEAMMEMBER = '팀별인원';
+var SHEET_TEAMROLE = '팀별역할';
 
 // 활동체크(출석·방문) 팀장 전용 비밀번호 — 관리자 비밀번호와는 별개의 가벼운 비밀번호입니다.
 // 이 비밀번호를 아는 사람만 아래 CHECK_RESTRICTED_TEAMS 팀의 체크를 할 수 있습니다.
-// (보수팀은 제외 — 보수팀은 누구나 체크 가능)
 var CHECK_PW = '팀장2026';
-var CHECK_RESTRICTED_TEAMS = ['안내팀', '오병이어팀', '꽃단장팀', '발지압팀', '추나요법팀', '소망카페팀', '소망놀이팀', '촬영팀', '소망택배팀'];
+var CHECK_RESTRICTED_TEAMS = ['안내팀', '오병이어팀', '꽃단장팀', '발지압팀', '추나요법팀', '소망카페팀', '소망놀이팀', '보수팀', '촬영팀', '소망택배팀'];
 
 var _cb = null; // JSONP callback 이름
 
@@ -44,6 +44,8 @@ function doGet(e) {
   if (action === 'adminRemoveMember') return handleAdminRemoveMember(params);
   if (action === 'adminSetColor')     return handleAdminSetColor(params);
   if (action === 'adminSetCompanion') return handleAdminSetCompanion(params);
+  if (action === 'getRoles')          return handleGetRoles();
+  if (action === 'adminEditRole')     return handleAdminEditRole(params);
 
   return jsonRes({ success: false, error: 'unknown action' });
 }
@@ -390,6 +392,58 @@ function handleAdminSetCompanion(p) {
   try {
     var sheet = ensureTeamMemberSheet_();
     sheet.getRange(row, 5).setValue(String(p.value) === 'true');
+  } finally {
+    lock.releaseLock();
+  }
+  return jsonRes({ success: true });
+}
+
+// ================================================================
+// 팀별역할("팀별역할" 탭) — 관리자 수정 가능, 처음 열 때 기본 내용으로 자동 생성
+// ================================================================
+function ensureTeamRoleSheet_() {
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var sheet = ss.getSheetByName(SHEET_TEAMROLE);
+  if (!sheet) {
+    sheet = ss.insertSheet(SHEET_TEAMROLE);
+    sheet.appendRow(['팀명', '역할', '세부내용', '도형', '색상']);
+    sheet.setFrozenRows(1);
+    var defaults = [
+      ['본부팀', '전체 운영, 배치, 음향, 서포팅 스텝', '구급약품, 지원물품, 각 Zone 명패제작, 안전위원, 블루투스 스피커 2개', '', ''],
+      ['안내팀', '안내, 등록, 이름표', '어르신 맞이, Zone 소개, 초청 목회자 전담 케어, 이름표(라벨)', '', ''],
+      ['오병이어팀', '바베큐, 식사', '야외 천막에서 식사, 숯불구이, 짝꿍 식사', 'circle', '#f2c230'],
+      ['꽃단장팀', '염색, 컷트, 머리감기기, 네일아트', '온수, 물뿌리개, 소요시간 1인(염색 1시간 / 머리행굼 10분 / 컷트 30분 / 네일아트 30분)', 'heart', '#e0405c'],
+      ['발지압팀', '세족 및 지압', '침대 2개, 양말, 수건, 세수대야, 소요시간 1인(세족 및 지압 10분)', 'circle', '#f48fb1'],
+      ['추나요법팀', '교정, 통증 완화', '장소: 교회(어르신들 교회 체험), 소요시간 1인(20분)/1명의 치료사가 10명 교정 가능', 'circle', '#2e9e5b'],
+      ['소망카페팀', '음료, 차, 다과, 사진', '맞춤 음료, 다과, 아이스크림 제공, 카페 데코, 신발정리 집게', '', ''],
+      ['소망놀이팀', '어르신 맞춤', '스크래치 카드, 명랑게임', 'star', '#2f80ed'],
+      ['보수팀', '가정 시설 수리', '시설수리 3건', '', ''],
+      ['촬영팀', '동영상 및 사진', '전체 사역에 대한 영상 및 스냅 사진 촬영', 'circle', '#2f80ed'],
+      ['소망택배팀', '개별 복음 제시', '맞춤 전도', 'circle', '#e03131']
+    ];
+    sheet.getRange(2, 1, defaults.length, 5).setValues(defaults);
+  }
+  return sheet;
+}
+
+// ── 공개: 팀별역할 불러오기 ────────────────────────────────────
+function handleGetRoles() {
+  var roles = sheetRows_(ensureTeamRoleSheet_()).map(function (r) {
+    return { row: r.row, team: r.v[0], role: r.v[1] || '', detail: r.v[2] || '', shape: r.v[3] || '', color: r.v[4] || '' };
+  });
+  return jsonRes({ success: true, roles: roles });
+}
+
+// ── 관리자: 팀별역할 수정 ──────────────────────────────────────
+function handleAdminEditRole(p) {
+  if (!checkAdmin_(p.pw)) return jsonRes({ success: false, error: '비밀번호가 올바르지 않습니다.' });
+  var row = parseInt(p.row || '0', 10);
+  if (!row || row < 2) return jsonRes({ success: false, error: '잘못된 행 번호' });
+  var lock = LockService.getScriptLock();
+  lock.waitLock(10000);
+  try {
+    var sheet = ensureTeamRoleSheet_();
+    sheet.getRange(row, 2, 1, 4).setValues([[p.role || '', p.detail || '', p.shape || '', p.color || '']]);
   } finally {
     lock.releaseLock();
   }

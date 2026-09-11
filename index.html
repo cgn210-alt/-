@@ -65,6 +65,7 @@
   .noticelist li::before{content:"▸";position:absolute;left:0;color:var(--brand);}
 
   /* 계획: 역할카드 */
+  .rolenotice{background:var(--brand-soft);color:var(--brand-deep);border:1.5px solid var(--brand);border-radius:12px;padding:10px 12px;font-size:13px;font-weight:700;line-height:1.5;margin-bottom:12px;}
   .rolegrid{display:flex;flex-direction:column;gap:10px;}
   .rolecard{border:1px solid var(--line);border-radius:14px;padding:12px 14px;background:#fafafb;}
   .rolecard .rc-top{display:flex;align-items:center;gap:8px;margin-bottom:4px;}
@@ -213,7 +214,7 @@
   <div class="panel" id="panel-plan">
     <div class="card">
       <div class="card-head"><span class="dot"></span><h2>운영 계획 및 팀별 역할</h2></div>
-      <p style="font-size:12px;color:var(--ink-soft);margin-top:-4px;">※ 팀명 옆 도형·색상은 체험 후 어르신께 부착해 드리는 팀별 스티커와 동일합니다.</p>
+      <div class="rolenotice">※ 팀명 옆 도형·색상은 체험 후 어르신께 부착해 드리는 팀별 스티커와 동일합니다.</div>
       <div class="rolegrid" id="roleGrid"></div>
     </div>
   </div>
@@ -252,7 +253,7 @@
     <div class="card">
       <div class="card-head"><span class="dot"></span><h2>초대자(마을주민) 출석 · 방문 체크</h2></div>
       <div class="apinote" id="apiNote" style="display:none;">아직 서버 주소가 설정되지 않았습니다. 우측 상단 ⚙ 버튼을 눌러 Apps Script 배포 주소를 입력해 주세요.</div>
-      <p style="font-size:12px;color:var(--ink-soft);margin-top:-4px;">※ 보수팀을 제외한 9개 팀은 팀장만 체크할 수 있습니다. (누구나 보기는 가능)</p>
+      <p style="font-size:12px;color:var(--ink-soft);margin-top:-4px;">※ 모든 팀은 팀장만 체크할 수 있습니다. (누구나 보기는 가능)</p>
       <div style="margin-bottom:10px;">
         <button id="checkGateOff" class="refreshbtn" style="display:inline-flex;align-items:center;" onclick="openCheckPwLogin()">🔒 팀장 체크 권한 확인</button>
         <span id="checkGateOn" style="display:none;align-items:center;gap:8px;">
@@ -398,6 +399,25 @@
   </div>
 </div>
 
+<!-- 팀별역할 수정 바텀시트 (관리자) -->
+<div class="sheet-bg" id="roleEditBg" onclick="closeRoleEdit()"></div>
+<div class="sheet" id="roleEditSheet">
+  <h3>✎ <span id="roleEditTeam"></span> 역할 수정</h3>
+  <input id="roleEditRole" placeholder="역할 요약 (예: 안내, 등록, 이름표)">
+  <input id="roleEditDetail" placeholder="세부내용">
+  <select id="roleEditShape" style="width:100%;padding:11px 12px;border:1px solid var(--line);border-radius:10px;font-size:14.5px;margin-bottom:8px;font-family:inherit;">
+    <option value="">도형 없음</option>
+    <option value="circle">원</option>
+    <option value="heart">하트</option>
+    <option value="star">별</option>
+  </select>
+  <select id="roleEditColor" style="width:100%;padding:11px 12px;border:1px solid var(--line);border-radius:10px;font-size:14.5px;margin-bottom:8px;font-family:inherit;"></select>
+  <div class="row">
+    <button class="cancel" onclick="closeRoleEdit()">취소</button>
+    <button class="save" onclick="submitRoleEdit()">저장</button>
+  </div>
+</div>
+
 <!-- 초대자명단: 이름/오타 수정 바텀시트 (관리자) -->
 <div class="sheet-bg" id="personEditBg" onclick="closePersonEdit()"></div>
 <div class="sheet" id="personEditSheet">
@@ -446,6 +466,9 @@ document.querySelectorAll('.tabbtn').forEach(btn=>{
     document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
     btn.classList.add('active');
     document.getElementById('panel-'+btn.dataset.tab).classList.add('active');
+    if(btn.dataset.tab==='plan'){
+      loadRoles();
+    }
     if(btn.dataset.tab==='invite'){
       if(!rosterCache.length) document.getElementById('peopleList').innerHTML = '<li class="prow"><div class="pinfo">⏳ 불러오는 중...</div></li>';
       loadRoster();
@@ -504,13 +527,65 @@ const ROLES=[
   {name:'촬영팀', role:'동영상 및 사진', detail:'전체 사역에 대한 영상 및 스냅 사진 촬영', shape:'circle', color:'#2f80ed'},
   {name:'소망택배팀', role:'개별 복음 제시', detail:'맞춤 전도', shape:'circle', color:'#e03131'},
 ];
-document.getElementById('roleGrid').innerHTML = ROLES.map(r=>{
-  let icon = '';
-  if(r.shape==='circle') icon = `<span class="rc-icon circle" style="background:${r.color}"></span>`;
-  else if(r.shape==='heart') icon = `<span class="rc-icon" style="color:${r.color}">♥</span>`;
-  else if(r.shape==='star') icon = `<span class="rc-icon" style="color:${r.color}">★</span>`;
-  return `<div class="rolecard"><div class="rc-top"><b>${r.name}</b>${icon}</div><div class="rc-role">${r.role}</div><p>${r.detail}</p></div>`;
-}).join('');
+function roleIconHtml(shape, color){
+  if(shape==='circle') return `<span class="rc-icon circle" style="background:${color}"></span>`;
+  if(shape==='heart') return `<span class="rc-icon" style="color:${color}">♥</span>`;
+  if(shape==='star') return `<span class="rc-icon" style="color:${color}">★</span>`;
+  return '';
+}
+// 기본(고정) 내용을 먼저 바로 보여주고, 서버에서 관리자가 수정한 최신 내용을 불러오면 교체합니다.
+document.getElementById('roleGrid').innerHTML = ROLES.map(r=>
+  `<div class="rolecard"><div class="rc-top"><b>${r.name}</b>${roleIconHtml(r.shape, r.color)}</div><div class="rc-role">${r.role}</div><p>${r.detail}</p></div>`).join('');
+
+let rolesCache = [];
+let lastRolesLoad = 0;
+let roleEditRow = null;
+function renderRoles(){
+  if(!rolesCache.length) return;
+  document.getElementById('roleGrid').innerHTML = rolesCache.map(r=>{
+    const editBtn = isAdmin ? `<button class="pmini" onclick="openRoleEdit(${r.row})">✎ 수정</button>` : '';
+    return `<div class="rolecard"><div class="rc-top"><b>${r.team}</b>${roleIconHtml(r.shape, r.color)}${editBtn}</div><div class="rc-role">${r.role}</div><p>${r.detail}</p></div>`;
+  }).join('');
+}
+async function loadRoles(force){
+  if(!force && rolesCache.length && Date.now() - lastRolesLoad < 8000) return;
+  if(!getGasUrl()) return;
+  try{
+    const res = await jsonp({action:'getRoles'});
+    if(res && res.success){ rolesCache = res.roles; lastRolesLoad = Date.now(); renderRoles(); }
+  }catch(err){ /* 실패해도 위에 이미 표시된 기본 내용이 있으니 조용히 넘어갑니다 */ }
+}
+function openRoleEdit(row){
+  const r = rolesCache.find(x=>x.row===row);
+  if(!r) return;
+  roleEditRow = row;
+  document.getElementById('roleEditTeam').textContent = r.team;
+  document.getElementById('roleEditRole').value = r.role || '';
+  document.getElementById('roleEditDetail').value = r.detail || '';
+  document.getElementById('roleEditShape').value = r.shape || '';
+  document.getElementById('roleEditColor').innerHTML = COLOR_PALETTE.map(c=>`<option value="${c.value}"${c.value===r.color?' selected':''}>${c.label}</option>`).join('');
+  document.getElementById('roleEditBg').classList.add('show');
+  document.getElementById('roleEditSheet').classList.add('show');
+}
+function closeRoleEdit(){
+  document.getElementById('roleEditBg').classList.remove('show');
+  document.getElementById('roleEditSheet').classList.remove('show');
+}
+async function submitRoleEdit(){
+  const role = document.getElementById('roleEditRole').value.trim();
+  const detail = document.getElementById('roleEditDetail').value.trim();
+  const shape = document.getElementById('roleEditShape').value;
+  const color = document.getElementById('roleEditColor').value;
+  try{
+    const res = await jsonp({action:'adminEditRole', row:roleEditRow, role:role, detail:detail, shape:shape, color:color, pw:adminPw});
+    if(res && res.success){
+      const r = rolesCache.find(x=>x.row===roleEditRow);
+      if(r){ r.role=role; r.detail=detail; r.shape=shape; r.color=color; }
+      renderRoles();
+      showToast('수정되었습니다.'); closeRoleEdit();
+    } else showToast(res && res.error ? res.error : '수정 실패');
+  }catch(err){ showToast('네트워크 오류'); }
+}
 
 /* ===================== 5. 인원배치 (버스배치 / 팀별 인원배치) ===================== */
 const COLOR_PALETTE=[
@@ -651,6 +726,7 @@ async function submitAdminLogin(){
       renderDeployment();
       renderPeople();
       renderMasterTable();
+      renderRoles();
     } else showToast('비밀번호가 올바르지 않습니다.');
   }catch(err){ showToast('네트워크 오류'); }
 }
@@ -663,6 +739,7 @@ function exitAdmin(){
   renderDeployment();
   renderPeople();
   renderMasterTable();
+  renderRoles();
 }
 
 /* 관리자: 이름 추가 */
@@ -774,8 +851,8 @@ document.getElementById('worshipTable').innerHTML = WORSHIP.map(w=>
 const TEAMS = ['안내팀','오병이어팀','꽃단장팀','발지압팀','추나요법팀','소망카페팀','소망놀이팀','보수팀','촬영팀','소망택배팀'];
 const TEAM_SHORT = {'오병이어팀':'오병','꽃단장팀':'꽃단','발지압팀':'발지','추나요법팀':'추나','소망카페팀':'카페','소망놀이팀':'놀이','보수팀':'보수','촬영팀':'촬영','소망택배팀':'택배','안내팀':'출석'};
 const VISIT_TEAMS = TEAMS.filter(t=>t!=='안내팀'); // 방문 체험 대상 9개 팀(안내팀=출석은 제외)
-// 체크 권한이 팀장으로 제한되는 9개 팀 (보수팀은 제외 — 보수팀은 누구나 체크 가능)
-const CHECK_RESTRICTED_TEAMS = TEAMS.filter(t=>t!=='보수팀');
+// 체크 권한이 팀장으로 제한되는 팀 (전체 10개 팀 모두 동일하게 적용)
+const CHECK_RESTRICTED_TEAMS = TEAMS.slice();
 let currentTeam = TEAMS[0];
 let rosterCache = [];
 let checkPw = '';
