@@ -255,7 +255,7 @@
       <input class="searchbox" id="searchBox" placeholder="이름으로 검색">
       <div class="progressbar">
         <span>체크 현황</span>
-        <span><b id="progNum">0/0</b> <button class="refreshbtn" onclick="loadRoster()">↻ 새로고침</button></span>
+        <span><b id="progNum">0/0</b> <button class="refreshbtn" onclick="loadRoster(true)">↻ 새로고침</button></span>
       </div>
       <ul class="plist" id="peopleList"></ul>
       <button class="addpersonbtn" onclick="openAddPerson()">+ 명단에 없는 방문객 현장 등록</button>
@@ -533,7 +533,11 @@ async function toggleTeamCompanion(row, checked){
   }catch(err){ showToast('네트워크 오류'); }
 }
 
-async function loadDeployment(){
+let lastDeploymentLoad = 0;
+async function loadDeployment(force){
+  // 탭을 왔다갔다 할 때마다 매번 서버에 다시 요청하면 사용자가 몰릴 때 부담이 커지므로,
+  // 최근에 이미 불러온 경우(8초 이내)는 재요청을 건너뜁니다. (새로고침 등은 force=true로 강제)
+  if(!force && deployCache.busInfo.length && Date.now() - lastDeploymentLoad < 8000) return;
   const note = document.getElementById('deployApiNote');
   if(!getGasUrl()){ note.textContent='아직 서버 주소가 설정되지 않았습니다. 우측 상단 ⚙ 버튼을 눌러 Apps Script 배포 주소를 입력해 주세요.'; note.style.display='block'; return; }
   note.style.display='none';
@@ -541,6 +545,7 @@ async function loadDeployment(){
     const res = await jsonp({action:'getDeployment'});
     if(res && res.success){
       deployCache = res;
+      lastDeploymentLoad = Date.now();
       renderDeployment();
     } else { note.textContent='인원배치 정보를 불러오지 못했습니다: '+(res && res.error ? res.error : '알 수 없는 오류'); note.style.display='block'; }
   }catch(err){ note.textContent='연결 실패: '+err.message; note.style.display='block'; }
@@ -757,7 +762,7 @@ function getGasUrl(){ return localStorage.getItem('gasUrl') || DEFAULT_GAS_URL; 
 function setGasUrl(v){ localStorage.setItem('gasUrl', v); }
 
 let _jsonpId=0;
-function jsonp(params){
+function jsonpOnce(params){
   const url=getGasUrl();
   if(!url) return Promise.reject(new Error('no-url'));
   return new Promise((resolve,reject)=>{
@@ -774,6 +779,16 @@ function jsonp(params){
     setTimeout(()=>{ if(!done){ const u=s.src; cleanup(); reject(new Error('timeout(35초 응답없음) — 주소: '+u)); } },35000);
   });
 }
+// 사용자 몰림 등으로 일시적으로 실패하면 잠깐 대기 후 자동으로 한 번 더 시도합니다.
+// (사람이 매번 새로고침 버튼을 누를 필요 없이 스스로 회복되도록)
+async function jsonp(params){
+  try{
+    return await jsonpOnce(params);
+  }catch(err){
+    await new Promise(r=>setTimeout(r, 1200));
+    return await jsonpOnce(params);
+  }
+}
 
 document.getElementById('teamPick').innerHTML = TEAMS.map((t,i)=>
   `<button class="teamchip${i===0?' active':''}" data-team="${t}">${t}${t==='안내팀'?' (출석)':''}</button>`).join('');
@@ -786,13 +801,17 @@ document.getElementById('teamPick').addEventListener('click', e=>{
 });
 document.getElementById('searchBox').addEventListener('input', renderPeople);
 
-async function loadRoster(){
+let lastRosterLoad = 0;
+async function loadRoster(force){
+  // 탭 전환마다 매번 재요청하면 사용자가 몰릴 때 서버 부담이 커지므로,
+  // 최근에 이미 불러온 경우(8초 이내)는 재요청을 건너뜁니다. (새로고침 등은 force=true로 강제)
+  if(!force && rosterCache.length && Date.now() - lastRosterLoad < 8000) return;
   const note = document.getElementById('apiNote');
   if(!getGasUrl()){ note.textContent='아직 서버 주소가 설정되지 않았습니다. 우측 상단 ⚙ 버튼을 눌러 Apps Script 배포 주소를 입력해 주세요.'; note.style.display='block'; return; }
   note.style.display='none';
   try{
     const res = await jsonp({action:'getRoster'});
-    if(res && res.success){ rosterCache = res.people; renderPeople(); renderMasterTable(); }
+    if(res && res.success){ rosterCache = res.people; lastRosterLoad = Date.now(); renderPeople(); renderMasterTable(); }
     else { note.textContent='명단을 불러오지 못했습니다: '+(res && res.error ? res.error : '알 수 없는 오류'); note.style.display='block'; }
   }catch(err){ note.textContent='연결 실패: '+err.message; note.style.display='block'; }
 }
@@ -933,7 +952,7 @@ async function submitAddPerson(){
   if(!name){ showToast('이름을 입력해 주세요.'); return; }
   try{
     const res = await jsonp({action:'addPerson', name:name, age:age});
-    if(res && res.success){ showToast('등록되었습니다.'); closeAddPerson(); document.getElementById('addName').value=''; document.getElementById('addAge').value=''; loadRoster(); }
+    if(res && res.success){ showToast('등록되었습니다.'); closeAddPerson(); document.getElementById('addName').value=''; document.getElementById('addAge').value=''; loadRoster(true); }
     else showToast('등록 실패');
   }catch(err){ showToast('네트워크 오류'); }
 }
@@ -952,7 +971,7 @@ function saveSettings(){
   setGasUrl(document.getElementById('gasUrlInput').value.trim());
   closeSettings();
   showToast('저장되었습니다.');
-  loadRoster();
+  loadRoster(true);
 }
 
 /* ===================== 이미지 확대(핀치 줌 + 드래그 팬) ===================== */
