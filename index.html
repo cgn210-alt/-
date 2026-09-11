@@ -93,9 +93,9 @@
   .memberchip.leader{font-weight:800;border-color:var(--brand);}
   .memberchip .mc-del{border:none;background:none;color:#c0392b;font-weight:900;cursor:pointer;font-size:12px;padding:0 2px;}
   .memberchip select{border:none;background:none;font-size:11px;color:var(--ink-soft);}
-  .companion-badge{background:#fff3cd;color:#8a6d1f;border-radius:6px;padding:1px 6px;font-size:10.5px;font-weight:800;}
-  .mc-comp{border:none;background:none;font-size:13px;padding:0 2px;cursor:pointer;opacity:.35;}
-  .mc-comp.on{opacity:1;}
+  .tb-companion{font-size:12px;color:var(--brand-deep);font-weight:700;margin:2px 0 6px;}
+  .tb-companion-edit{display:flex;align-items:center;gap:6px;margin:2px 0 6px;font-size:12px;color:var(--ink-soft);}
+  .tb-companion-edit select{padding:3px 6px;border:1px solid var(--line);border-radius:6px;font-size:12px;font-family:inherit;}
   .addmini{margin-top:8px;border:1.5px dashed var(--brand);background:var(--brand-soft);color:var(--brand-deep);border-radius:10px;padding:6px 10px;font-size:12.5px;font-weight:700;cursor:pointer;}
   .busmeta{font-size:13px;color:var(--ink-soft);margin:2px 0;}
   .busmeta b{color:var(--brand-deep);}
@@ -514,21 +514,26 @@ function colorSelectHtml(target, row, current){
     `</select>`;
 }
 function memberChip(target, m){
-  const companionBadge = m.companion ? `<span class="companion-badge" title="동행지기 — 같은 팀 안에서 팀원들을 챙기는 담당자">🤝동행지기</span>` : '';
-  const companionBtn = (isAdmin && target==='team')
-    ? `<button class="mc-comp${m.companion?' on':''}" title="동행지기 지정/해제" onclick="toggleCompanion(${m.row}, ${!!m.companion})">🤝</button>` : '';
-  const admin = isAdmin ? `${colorSelectHtml(target, m.row, m.color)}${companionBtn}<button class="mc-del" onclick="adminRemoveMember('${target}', ${m.row})">✕</button>` : '';
-  return `<span class="memberchip${m.leader?' leader':''}">${nameColorSpan(m)}${companionBadge}${admin}</span>`;
+  const admin = isAdmin ? `${colorSelectHtml(target, m.row, m.color)}<button class="mc-del" onclick="adminRemoveMember('${target}', ${m.row})">✕</button>` : '';
+  return `<span class="memberchip${m.leader?' leader':''}">${nameColorSpan(m)}${admin}</span>`;
 }
-async function toggleCompanion(row, current){
+/* 동행지기 — 이름마다 표시하지 않고, 팀 단위로 한 명만 별도 지정 */
+async function setTeamCompanion(team, rowStr){
+  const newRow = rowStr ? parseInt(rowStr, 10) : null;
+  const teamMembers = deployCache.teamMembers.filter(m=>m.team===team);
+  const prev = teamMembers.find(m=>m.companion);
   try{
-    const res = await jsonp({action:'adminSetCompanion', row:row, value: !current, pw:adminPw});
-    if(res && res.success){
-      const m = deployCache.teamMembers.find(x=>x.row===row);
-      if(m) m.companion = !current;
-      renderDeployment();
-      showToast(!current ? '동행지기로 지정되었습니다.' : '동행지기 지정이 해제되었습니다.');
-    } else showToast(res && res.error ? res.error : '변경 실패');
+    if(prev && prev.row !== newRow){
+      const r1 = await jsonp({action:'adminSetCompanion', row:prev.row, value:'false', pw:adminPw});
+      if(r1 && r1.success) prev.companion = false;
+    }
+    if(newRow){
+      const target = teamMembers.find(m=>m.row===newRow);
+      const r2 = await jsonp({action:'adminSetCompanion', row:newRow, value:'true', pw:adminPw});
+      if(r2 && r2.success && target) target.companion = true;
+    }
+    renderDeployment();
+    showToast('동행지기가 설정되었습니다.');
   }catch(err){ showToast('네트워크 오류'); }
 }
 
@@ -588,8 +593,16 @@ function renderTeamSection(){
   document.getElementById('teamSection').innerHTML = teams.map(team=>{
     const list = sortMembers_(deployCache.teamMembers.filter(m=>m.team===team));
     const addBtn = isAdmin ? `<button class="addmini" onclick="openDeployAdd('team','', '${team}')">+ ${team} 인원 추가</button>` : '';
+    const companion = list.find(m=>m.companion);
+    const companionHtml = isAdmin
+      ? `<div class="tb-companion-edit"><label>🤝 동행지기</label><select onchange="setTeamCompanion('${team}', this.value)">
+           <option value="">미지정</option>
+           ${list.map(m=>`<option value="${m.row}"${companion && companion.row===m.row?' selected':''}>${m.name}</option>`).join('')}
+         </select></div>`
+      : (companion ? `<div class="tb-companion">🤝 동행지기 : ${companion.name}</div>` : '');
     return `<div class="teamblock">
       <div class="tb-head"><b>${team}</b><span class="tb-count">${list.length}명</span></div>
+      ${companionHtml}
       <div class="memberwrap">${list.map(m=>memberChip('team', m)).join('')}</div>
       ${addBtn}
     </div>`;
