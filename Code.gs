@@ -475,6 +475,9 @@ function ensureEventSheet_() {
     sheet = ss.insertSheet(SHEET_EVENT);
     sheet.appendRow(['구분', '시간', '제목', '내용']);
     sheet.setFrozenRows(1);
+    // "06:00" 같은 값을 구글시트가 날짜/시간 값으로 자동 변환해버리는 것을 막기 위해
+    // 시간(B열)을 일반 텍스트 서식으로 고정합니다.
+    sheet.getRange('B:B').setNumberFormat('@');
     var defaults = [
       ['timeline', '06:00', '출발', '서빙고 온누리 교회 앞 주차장'],
       ['timeline', '09:00', '도착', '경북 상주시 소망교회'],
@@ -496,14 +499,28 @@ function ensureEventSheet_() {
       ['notice', '', '', '버스 1호 차장 주웅현 / 버스 2호 차장 정두식 — 탑승자 명단 확인하여 인원 체크']
     ];
     sheet.getRange(2, 1, defaults.length, 4).setValues(defaults);
+  } else {
+    // 이미 만들어진 시트라도 항상 시간 칸 서식을 텍스트로 고정해, 이후 수정할 때
+    // 또 다시 날짜/시간 값으로 바뀌는 것을 막습니다.
+    sheet.getRange('B:B').setNumberFormat('@');
   }
   return sheet;
+}
+
+// 구글시트가 "06:00" 같은 값을 날짜/시간으로 자동 변환해버린 셀을 읽었을 때,
+// 화면에는 다시 "06:00" 형태로 정상 표시되도록 보정합니다.
+function formatEventTime_(val) {
+  if (Object.prototype.toString.call(val) === '[object Date]') {
+    var tz = SpreadsheetApp.getActiveSpreadsheet().getSpreadsheetTimeZone();
+    return Utilities.formatDate(val, tz, 'HH:mm');
+  }
+  return val || '';
 }
 
 // ── 공개: 행사일정 + 공지사항 불러오기 ────────────────────────
 function handleGetEvent() {
   var items = sheetRows_(ensureEventSheet_()).map(function (r) {
-    return { row: r.row, type: r.v[0] || 'timeline', time: r.v[1] || '', label: r.v[2] || '', detail: r.v[3] || '' };
+    return { row: r.row, type: r.v[0] || 'timeline', time: formatEventTime_(r.v[1]), label: r.v[2] || '', detail: r.v[3] || '' };
   });
   return jsonRes({ success: true, items: items });
 }
