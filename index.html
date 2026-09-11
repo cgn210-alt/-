@@ -60,12 +60,14 @@
   .noticelist li::before{content:"▸";position:absolute;left:0;color:var(--brand);}
 
   /* 계획: 역할카드 */
-  .rolegrid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
-  .rolecard{border:1px solid var(--line);border-radius:14px;padding:11px 12px;background:#fafafb;}
-  .rolecard .rc-top{display:flex;align-items:center;gap:7px;margin-bottom:4px;}
-  .rolecard .rc-dot{width:10px;height:10px;border-radius:50%;flex:none;}
-  .rolecard b{font-size:13.5px;}
-  .rolecard p{margin:0;font-size:12.3px;color:var(--ink-soft);line-height:1.45;}
+  .rolegrid{display:flex;flex-direction:column;gap:10px;}
+  .rolecard{border:1px solid var(--line);border-radius:14px;padding:12px 14px;background:#fafafb;}
+  .rolecard .rc-top{display:flex;align-items:center;gap:8px;margin-bottom:4px;}
+  .rolecard .rc-top b{font-size:14.5px;}
+  .rc-icon{font-size:17px;line-height:1;flex:none;}
+  .rc-icon.circle{width:14px;height:14px;border-radius:50%;display:inline-block;}
+  .rc-role{font-size:12.8px;font-weight:700;color:var(--brand-deep);margin-bottom:3px;}
+  .rolecard p{margin:0;font-size:12.5px;color:var(--ink-soft);line-height:1.5;}
 
   /* 배치 */
   .busbox{border:1px solid var(--line);border-radius:14px;padding:12px 14px;margin-bottom:10px;background:#fafafb;}
@@ -76,11 +78,20 @@
   .zonetable th{color:var(--ink-soft);font-weight:700;font-size:12.5px;}
   .mapimg{width:100%;border-radius:12px;margin-top:6px;display:block;}
 
-  /* 신청자 */
-  .grouptitle{font-size:13.5px;font-weight:800;color:var(--brand-deep);margin:14px 0 6px;}
-  .grouptitle:first-child{margin-top:0;}
-  .namechip{display:inline-block;background:var(--brand-soft);color:var(--brand-deep);border-radius:8px;padding:5px 9px;font-size:12.8px;font-weight:700;margin:0 5px 5px 0;}
-  .totalline{margin-top:14px;padding-top:10px;border-top:1px dashed var(--line);font-size:13.5px;font-weight:800;text-align:right;color:var(--brand-deep);}
+  /* 인원배치: 팀 블록 / 이름칩 / 관리자 컨트롤 */
+  .teamblock{border:1px solid var(--line);border-radius:14px;padding:11px 13px;margin-bottom:10px;background:#fafafb;}
+  .teamblock .tb-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;}
+  .teamblock .tb-head b{font-size:14px;color:var(--brand-deep);}
+  .teamblock .tb-count{font-size:12px;color:var(--ink-soft);}
+  .memberwrap{display:flex;flex-wrap:wrap;gap:6px;}
+  .memberchip{display:inline-flex;align-items:center;gap:4px;background:#fff;border:1px solid var(--line);border-radius:8px;padding:4px 8px;font-size:12.5px;}
+  .memberchip.leader{font-weight:800;border-color:var(--brand);}
+  .memberchip .mc-del{border:none;background:none;color:#c0392b;font-weight:900;cursor:pointer;font-size:12px;padding:0 2px;}
+  .memberchip select{border:none;background:none;font-size:11px;color:var(--ink-soft);}
+  .addmini{margin-top:8px;border:1.5px dashed var(--brand);background:var(--brand-soft);color:var(--brand-deep);border-radius:10px;padding:6px 10px;font-size:12.5px;font-weight:700;cursor:pointer;}
+  .busmeta{font-size:13px;color:var(--ink-soft);margin:2px 0;}
+  .busmeta b{color:var(--brand-deep);}
+  .busedit{border:none;background:none;color:var(--brand-deep);font-weight:700;font-size:12px;cursor:pointer;}
 
   /* 초대(체크리스트) */
   .teampick{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px;}
@@ -93,11 +104,19 @@
   .plist{list-style:none;margin:0;padding:0;}
   .prow{display:flex;align-items:center;gap:10px;padding:11px 4px;border-bottom:1px solid var(--line);}
   .prow:last-child{border-bottom:none;}
+  .prow.admin{flex-direction:column;align-items:stretch;}
   .prow .pinfo{flex:1;}
   .prow .pname{font-size:15px;font-weight:700;}
   .prow .pmeta{font-size:12px;color:var(--ink-soft);margin-top:2px;}
   .chkbtn{flex:none;width:60px;height:34px;border-radius:10px;border:1.5px solid var(--line);background:#fff;color:var(--ink-soft);font-weight:800;font-size:12.8px;cursor:pointer;}
   .chkbtn.on{background:var(--ok-soft);border-color:var(--ok);color:var(--ok);}
+  .teamprogress{display:flex;flex-wrap:wrap;align-items:center;gap:4px;margin-top:5px;}
+  .tpdot{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:50%;background:#eee;color:#aaa;font-size:10px;font-weight:800;border:1px solid var(--line);}
+  .tpdot.done{background:var(--brand);color:#fff;border-color:var(--brand);}
+  .tp-count{font-size:11px;color:var(--ink-soft);margin-left:4px;}
+  .adminmatrix{display:flex;flex-wrap:wrap;gap:5px;margin-top:8px;}
+  .adminchk{padding:6px 9px;border-radius:8px;border:1.5px solid var(--line);background:#fff;color:var(--ink-soft);font-size:11.5px;font-weight:700;cursor:pointer;}
+  .adminchk.on{background:var(--ok-soft);border-color:var(--ok);color:var(--ok);}
   .addpersonbtn{width:100%;margin-top:12px;padding:11px;border:1.5px dashed var(--brand);background:var(--brand-soft);color:var(--brand-deep);border-radius:12px;font-weight:700;font-size:13.5px;cursor:pointer;}
   .apinote{font-size:12px;color:var(--ink-soft);background:#fff8e6;border:1px solid #ffe6a8;border-radius:10px;padding:8px 10px;margin-bottom:10px;}
 
@@ -142,12 +161,11 @@
 </div>
 
 <div class="tabbar" id="tabbar">
-  <button class="tabbtn" data-tab="event">3.행사</button>
-  <button class="tabbtn" data-tab="plan">4.계획</button>
-  <button class="tabbtn" data-tab="deploy">5.배치</button>
-  <button class="tabbtn" data-tab="applicant">7.신청자</button>
-  <button class="tabbtn" data-tab="invite">9.초대·체크</button>
-  <button class="tabbtn" data-tab="worship">10.예배</button>
+  <button class="tabbtn" data-tab="event">행사일정</button>
+  <button class="tabbtn" data-tab="plan">팀별역할</button>
+  <button class="tabbtn" data-tab="deploy">인원배치</button>
+  <button class="tabbtn" data-tab="invite">활동체크</button>
+  <button class="tabbtn" data-tab="worship">예배</button>
 </div>
 
 <div class="wrap">
@@ -168,6 +186,7 @@
   <div class="panel" id="panel-plan">
     <div class="card">
       <div class="card-head"><span class="dot"></span><h2>운영 계획 및 팀별 역할</h2></div>
+      <p style="font-size:12px;color:var(--ink-soft);margin-top:-4px;">※ 팀명 옆 도형·색상은 체험 후 어르신께 부착해 드리는 팀별 스티커와 동일합니다.</p>
       <div class="rolegrid" id="roleGrid"></div>
     </div>
   </div>
@@ -176,32 +195,32 @@
   <div class="panel" id="panel-deploy">
     <div class="card">
       <div class="card-head"><span class="dot"></span><h2>버스 배치</h2></div>
-      <div id="busBoxes"></div>
+      <div class="apinote" id="deployApiNote" style="display:none;">아직 서버 주소가 설정되지 않았습니다. 우측 상단 ⚙ 버튼을 눌러 Apps Script 배포 주소를 입력해 주세요.</div>
+      <div id="busSection"></div>
     </div>
     <div class="card">
-      <div class="card-head"><span class="dot"></span><h2>구역(Zone)별 인원 배치</h2></div>
-      <p style="font-size:12px;color:var(--ink-soft);margin-top:-4px;">※ 원본 배치표 인쇄 상태에 따라 일부 수치는 현장 배치표와 다를 수 있어 재확인이 필요합니다.</p>
-      <table class="zonetable">
-        <thead><tr><th>구역</th><th>팀</th><th>인원(약)</th></tr></thead>
-        <tbody id="zoneBody"></tbody>
-      </table>
+      <div class="card-head"><span class="dot"></span><h2>팀별 인원 배치</h2></div>
+      <p style="font-size:12px;color:var(--ink-soft);margin-top:-4px;">※ 이미지 판독 한계로 일부 인원·이름은 재확인이 필요합니다. [확인필요] 표시를 참고해 관리자 모드에서 정정해 주세요.</p>
+      <div id="teamSection"></div>
     </div>
     <div class="card">
       <div class="card-head"><span class="dot"></span><h2>마을잔치 배치도</h2></div>
-      <img class="mapimg" src="assets/배치도.png" alt="배치도" onclick="openImage(this.src)">
+      <div class="scoregallery">
+        <img src="assets/배치도_1차.png" onclick="openImage(this.src)" alt="마을잔치 배치도 1차 11:30분 식사">
+        <img src="assets/배치도_2차.png" onclick="openImage(this.src)" alt="마을잔치 배치도 2차 13:00 행사">
+      </div>
     </div>
-  </div>
-
-  <!-- 7. 신청자 -->
-  <div class="panel" id="panel-applicant">
     <div class="card">
-      <div class="card-head"><span class="dot"></span><h2>신청자 명단 (다락방별)</h2></div>
-      <div id="applicantList"></div>
-      <div class="totalline" id="applicantTotal"></div>
+      <div class="card-head"><span class="dot"></span><h2>⚙ 인원배치 관리자</h2></div>
+      <div id="adminGateOff"><button class="addpersonbtn" onclick="openAdminLogin()">🔒 관리자 모드로 편집하기</button></div>
+      <div id="adminGateOn" style="display:none;">
+        <p style="font-size:12.5px;color:var(--ok);font-weight:700;">✓ 관리자 모드 (이름 추가·삭제·색상 변경 가능)</p>
+        <button class="addpersonbtn" onclick="exitAdmin()">관리자 모드 종료</button>
+      </div>
     </div>
   </div>
 
-  <!-- 9. 초대 + 체크 -->
+  <!-- 초대 + 체크 -->
   <div class="panel" id="panel-invite">
     <div class="card">
       <div class="card-head"><span class="dot"></span><h2>초대자(마을주민) 출석 · 방문 체크</h2></div>
@@ -218,6 +237,15 @@
     <div class="card">
       <div class="card-head"><span class="dot"></span><h2>초청자 명단 원본 (총 56명 / 평균연령 74.7세)</h2></div>
       <p style="font-size:12px;color:var(--ink-soft);">※ 목회자·이장·사모 포함. 최고령 92세(김월임, 엄금자). 위 체크리스트와 동일한 명단입니다.</p>
+    </div>
+    <div class="card">
+      <div class="card-head"><span class="dot"></span><h2>⚙ 관리자</h2></div>
+      <p style="font-size:12px;color:var(--ink-soft);margin-top:-4px;">일반 사용자는 위에서 선택한 팀의 체크만 가능합니다. 잘못 체크된 다른 팀 기록을 고치려면 관리자 모드로 들어와 주세요.</p>
+      <div id="inviteAdminGateOff"><button class="addpersonbtn" onclick="openAdminLogin()">🔒 관리자 모드로 편집하기</button></div>
+      <div id="inviteAdminGateOn" style="display:none;">
+        <p style="font-size:12.5px;color:var(--ok);font-weight:700;">✓ 관리자 모드 (모든 팀의 체크를 직접 수정 가능)</p>
+        <button class="addpersonbtn" onclick="exitAdmin()">관리자 모드 종료</button>
+      </div>
     </div>
   </div>
 
@@ -274,6 +302,45 @@
   </div>
 </div>
 
+<!-- 관리자 로그인 바텀시트 -->
+<div class="sheet-bg" id="adminLoginBg" onclick="closeAdminLogin()"></div>
+<div class="sheet" id="adminLoginSheet">
+  <h3>🔒 관리자 로그인</h3>
+  <input id="adminPwInput" type="password" placeholder="관리자 비밀번호">
+  <div class="row">
+    <button class="cancel" onclick="closeAdminLogin()">취소</button>
+    <button class="save" onclick="submitAdminLogin()">확인</button>
+  </div>
+</div>
+
+<!-- 인원배치: 이름 추가 바텀시트 (관리자) -->
+<div class="sheet-bg" id="deployAddBg" onclick="closeDeployAdd()"></div>
+<div class="sheet" id="deployAddSheet">
+  <h3 id="deployAddTitle">+ 이름 추가</h3>
+  <input id="deployAddName" placeholder="이름">
+  <select id="deployAddColor" style="width:100%;padding:11px 12px;border:1px solid var(--line);border-radius:10px;font-size:14.5px;margin-bottom:8px;font-family:inherit;"></select>
+  <div class="row">
+    <button class="cancel" onclick="closeDeployAdd()">취소</button>
+    <button class="save" onclick="submitDeployAdd()">추가</button>
+  </div>
+</div>
+
+<!-- 버스 정보 수정 바텀시트 (관리자) -->
+<div class="sheet-bg" id="busEditBg" onclick="closeBusEdit()"></div>
+<div class="sheet" id="busEditSheet">
+  <h3 id="busEditTitle">버스 정보 수정</h3>
+  <input id="busEditTotal" placeholder="총 인원 (예: 37)">
+  <input id="busEditDriverName" placeholder="기사명">
+  <input id="busEditDriverPhone" placeholder="기사 연락처">
+  <input id="busEditPlate" placeholder="차량번호">
+  <input id="busEditConductor" placeholder="차장">
+  <input id="busEditItems" placeholder="수령물품 (쉼표로 구분)">
+  <div class="row">
+    <button class="cancel" onclick="closeBusEdit()">취소</button>
+    <button class="save" onclick="submitBusEdit()">저장</button>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <script>
@@ -285,6 +352,7 @@ document.querySelectorAll('.tabbtn').forEach(btn=>{
     btn.classList.add('active');
     document.getElementById('panel-'+btn.dataset.tab).classList.add('active');
     if(btn.dataset.tab==='invite') loadRoster();
+    if(btn.dataset.tab==='deploy') loadDeployment();
   });
 });
 document.querySelector('.tabbtn').classList.add('active');
@@ -292,77 +360,238 @@ document.getElementById('panel-event').classList.add('active');
 
 /* ===================== 3. 행사 데이터 ===================== */
 const EVENT_TIMELINE=[
-  ['06:00','출발','서빙고 온누리교회 앞 주차장'],
+  ['06:00','출발','서빙고 온누리 교회 앞 주차장'],
   ['09:00','도착','경북 상주시 소망교회'],
   ['10:00','예배','소망교회 본당 / 오리엔테이션'],
-  ['11:00','준비','섬김팀별(Zone) 안내·식사·이용·꽃단장·카페·놀이·보수·촬영 전도'],
-  ['11:30','잔치','오병이어팀, 꽃단장팀, 발지압팀, 추나요법팀, 소망카페팀, 소망놀이팀, 소망택배팀'],
-  ['17:00','초대','소망교회 본당 / 폭죽쇼 시간'],
+  ['11:00','준비','안내, 식사, 미용, 지압, 교정, 카페, 놀이, 보수, 촬영, 전도'],
+  ['11:30','잔치','안내, 오병이어팀, 꽃단장팀, 발지압팀, 추나요법팀, 소망카페팀, 소망놀이팀, 보수팀, 촬영팀, 소망택배팀'],
+  ['17:00','초대','소망교회 본당 / 축복의 시간'],
   ['17:30','마을출발','상주점 다담뜰한식뷔페 (054-533-2118)'],
   ['18:00','식당도착','저녁식사'],
   ['19:00','복귀','상주점 다담뜰한식뷔페 출발'],
   ['21:00','도착','서빙고 온누리교회'],
 ];
 const EVENT_NOTICE=[
-  '출발시간 엄수 : 5:40분까지 서빙고 온누리교회 앞 주차장으로 집결',
+  '출발시간 엄수 : 5시 50분까지 서빙고 온누리 교회 앞 주차장으로 집결',
   '복장 : 자유복장',
   '개별 준비 : 긴팔, 점퍼, 정기 복용 약품',
-  '섬김 코너별 팀장님의 인솔에 따라 준비가 진행됨',
-  '어르신들 관련 지원·문의·운영 관련 사항은 본부석에서 확인',
-  '모든 섬김 관련 지원·문의·운영 관련 사항은 본부석에서 확인',
-  '오병이어팀 : 예방(위생) 앞치마 등 준비 필요(고기냄새 배는 옷 착용 권장)',
-  '버스 1호차 담당 주웅현(010-8212-7455) / 버스 2호차 담당 정두식(010-6513-7616) — 탑승자 명단 확인 후 인원 체크',
+  '섬김 코너별 팀장님의 인솔에 따라 준비와 진행을 시행',
+  '어르신들의 섬김은 시작부터 끝까지 따뜻한 태도로 섬김',
+  '모든 운영 관련 지원, 문의, 운영 관련 사항은 본부팀에 확인',
+  '오병이어팀 여벌의 옷 준비(고기냄새) / 천막 없이 섬김으로 모자 준비 필수',
+  '버스 1호 차장 주웅현 / 버스 2호 차장 정두식 — 탑승자 명단 확인하여 인원 체크',
 ];
 document.getElementById('eventTimeline').innerHTML = EVENT_TIMELINE.map(t=>
   `<li><span class="tm">${t[0]}</span><span class="tx"><b>${t[1]}</b><small>${t[2]}</small></span></li>`).join('');
 document.getElementById('eventNotice').innerHTML = EVENT_NOTICE.map(n=>`<li>${n}</li>`).join('');
 
 /* ===================== 4. 계획 데이터 ===================== */
+/* shape/color는 체험 완료 시 어르신께 부착하는 실제 팀별 스티커(도형·색) 기준입니다.
+   화면 색상은 원본 이미지를 보고 근사치로 지정한 것이니, 실제 스티커 색과 다르면 알려주세요. */
 const ROLES=[
-  ['#8b6bb8','본부팀 (Z0)','전체 운영·배치·물품 총괄, 사역자 간 소통·조정'],
-  ['#4a90d9','안내팀','안내, 통역, 이름표 배부'],
-  ['#e0a730','오병이어팀','식사 배부, 잔치 음식 준비'],
-  ['#e05a7a','꽃단장팀','염색, 컷, 파마, 세팅펌'],
-  ['#e05a7a','발지압팀','세족 및 발 지압'],
-  ['#e05a7a','추나요법팀','교정, 통증 완화'],
-  ['#2e9e5b','소망카페팀','음료·다과 제공, 사진'],
-  ['#2e9e5b','소망놀이팀','어르신 맞춤 놀이·체험'],
-  ['#d9822b','보수팀','가정집 시설 수리'],
-  ['#d9822b','촬영팀','행사 동영상 및 사진 촬영'],
-  ['#6a6a74','소망택배팀','개별 복음 제시 및 선물 전달'],
+  {name:'본부팀', role:'전체 운영, 배치, 음향, 서포팅 스텝', detail:'구급약품, 지원물품, 각 Zone 명패제작, 안전위원, 블루투스 스피커 2개', shape:null, color:null},
+  {name:'안내팀', role:'안내, 등록, 이름표', detail:'어르신 맞이, Zone 소개, 초청 목회자 전담 케어, 이름표(라벨)', shape:null, color:null},
+  {name:'오병이어팀', role:'바베큐, 식사', detail:'야외 천막에서 식사, 숯불구이, 짝꿍 식사', shape:'circle', color:'#f2c230'},
+  {name:'꽃단장팀', role:'염색, 컷트, 머리감기기, 네일아트', detail:'온수, 물뿌리개, 소요시간 1인(염색 1시간 / 머리행굼 10분 / 컷트 30분 / 네일아트 30분)', shape:'heart', color:'#e0405c'},
+  {name:'발지압팀', role:'세족 및 지압', detail:'침대 2개, 양말, 수건, 세수대야, 소요시간 1인(세족 및 지압 10분)', shape:'circle', color:'#f48fb1'},
+  {name:'추나요법팀', role:'교정, 통증 완화', detail:'장소: 교회(어르신들 교회 체험), 소요시간 1인(20분)/1명의 치료사가 10명 교정 가능', shape:'circle', color:'#2e9e5b'},
+  {name:'소망카페팀', role:'음료, 차, 다과, 사진', detail:'맞춤 음료, 다과, 아이스크림 제공, 카페 데코, 신발정리 집게', shape:null, color:null},
+  {name:'소망놀이팀', role:'어르신 맞춤', detail:'스크래치 카드, 명랑게임', shape:'star', color:'#2f80ed'},
+  {name:'보수팀', role:'가정 시설 수리', detail:'시설수리 3건', shape:null, color:null},
+  {name:'촬영팀', role:'동영상 및 사진', detail:'전체 사역에 대한 영상 및 스냅 사진 촬영', shape:'circle', color:'#2f80ed'},
+  {name:'소망택배팀', role:'개별 복음 제시', detail:'맞춤 전도', shape:'circle', color:'#e03131'},
 ];
-document.getElementById('roleGrid').innerHTML = ROLES.map(r=>
-  `<div class="rolecard"><div class="rc-top"><span class="rc-dot" style="background:${r[0]}"></span><b>${r[1]}</b></div><p>${r[2]}</p></div>`).join('');
+document.getElementById('roleGrid').innerHTML = ROLES.map(r=>{
+  let icon = '';
+  if(r.shape==='circle') icon = `<span class="rc-icon circle" style="background:${r.color}"></span>`;
+  else if(r.shape==='heart') icon = `<span class="rc-icon" style="color:${r.color}">♥</span>`;
+  else if(r.shape==='star') icon = `<span class="rc-icon" style="color:${r.color}">★</span>`;
+  return `<div class="rolecard"><div class="rc-top"><b>${r.name}</b>${icon}</div><div class="rc-role">${r.role}</div><p>${r.detail}</p></div>`;
+}).join('');
 
-/* ===================== 5. 배치 데이터 ===================== */
-document.getElementById('busBoxes').innerHTML = `
-  <div class="busbox"><b>1호차 · 37명</b> (운전원 제외)<div>이보영 010-9115-0939 · 서울72허6384</div><div>담당 : 주웅현</div></div>
-  <div class="busbox"><b>2호차 · 42명</b> (운전원 제외)<div>최유호 010-8633-8777 · 서울72허6382</div><div>담당 : 정두식</div></div>
-`;
-const ZONES=[
-  ['Z0','본부팀','20'],['Z1','안내팀','5'],['Z2','오병이어팀','18'],['Z3','꽃단장팀','24'],
-  ['Z4','발지압팀','7'],['Z5','추나요법팀','5'],['Z6','소망카페팀','9'],['Z7','소망놀이팀','2'],
-  ['Z8','보수팀','5'],['Z9','촬영팀','3'],['Z10','소망택배팀','-'],
+/* ===================== 5. 인원배치 (버스배치 / 팀별 인원배치) ===================== */
+const COLOR_PALETTE=[
+  {label:'기본색', value:''},
+  {label:'빨강', value:'#e03131'},
+  {label:'오렌지', value:'#e8830c'},
+  {label:'초록', value:'#2e9e5b'},
+  {label:'파랑', value:'#2f80ed'},
+  {label:'보라', value:'#8b6bb8'},
 ];
-document.getElementById('zoneBody').innerHTML = ZONES.map(z=>`<tr><td>${z[0]}</td><td>${z[1]}</td><td>${z[2]}</td></tr>`).join('');
+const TEAM_ORDER=['리더십','본부팀','안내팀','오병이어팀','꽃단장팀','발지압팀','추나요법팀','소망카페팀','소망놀이팀','보수팀','촬영팀','소망택배팀'];
 
-/* ===================== 7. 신청자 데이터 (다락방별, 총 80명) ===================== */
-const APPLICANTS=[
-  ['공동체', ['노치형 목사']],
-  ['임용 1', ['김미래','김성희','주웅현','서정욱','송경욱','민희정','김영옥','주진혁','오 명','김한식','홍은선','황춘성','정순영','정경희','정두식','이영미','황춘나','이연자']],
-  ['임용 2', ['조계관','김윤경','엄재준','고봉옥','엄호산','이창권','장윤아','이일순','박선영']],
-  ['소망 1', ['박재환','김윤미','지형근','이지연','남관우','구자영','김희정','장혜영','이창배']],
-  ['소망 2', ['최인경','정세정','감미란','박주연','김지은','진선희']],
-  ['사랑 1', ['최재현','박은규','이상우','이은경','임동욱','유덕영','정한기','이상문','장윤지','임소미','배은하','변지숙','박성애(취소)']],
-  ['사랑 2', ['이보윤','김한국','안승립','구예정','이희자','김남정','최황','오영미','박지수','이지영','정은주','유재연','김종중','정영혜','정춘균','이연주','고혜순(취소)','박애우','정기순']],
-  ['타공동체', ['신유순(권사)','김희정(84년생)','김민종·서병이·권대구 (주나요법팀, 자차이용)']],
-  ['기타', ['최국호(버스기사)']],
-];
-document.getElementById('applicantList').innerHTML = APPLICANTS.map(g=>
-  `<div class="grouptitle">${g[0]}</div>` + g[1].map(n=>`<span class="namechip">${n}</span>`).join('')).join('');
-document.getElementById('applicantTotal').textContent = '총 신청 인원 80명';
+let deployCache = {busInfo:[], busMembers:[], teamMembers:[]};
+let isAdmin = false;
+let adminPw = '';
+let deployAddCtx = null; // {target:'bus'|'team', bus, team}
+let busEditCtx = null;   // bus 문자열
 
-/* ===================== 10. 예배 데이터 ===================== */
+function nameColorSpan(m){
+  return `<span${m.color?` style="color:${m.color};font-weight:700;"`:''}>${m.name}</span>`;
+}
+function colorSelectHtml(target, row, current){
+  return `<select onchange="adminSetColor('${target}', ${row}, this.value)">` +
+    COLOR_PALETTE.map(c=>`<option value="${c.value}"${c.value===current?' selected':''}>${c.label}</option>`).join('') +
+    `</select>`;
+}
+function memberChip(target, m){
+  const admin = isAdmin ? `${colorSelectHtml(target, m.row, m.color)}<button class="mc-del" onclick="adminRemoveMember('${target}', ${m.row})">✕</button>` : '';
+  return `<span class="memberchip${m.leader?' leader':''}">${nameColorSpan(m)}${admin}</span>`;
+}
+
+async function loadDeployment(){
+  if(!getGasUrl()){ document.getElementById('deployApiNote').style.display='block'; return; }
+  document.getElementById('deployApiNote').style.display='none';
+  try{
+    const res = await jsonp({action:'getDeployment'});
+    if(res && res.success){
+      deployCache = res;
+      renderDeployment();
+    } else showToast('인원배치 정보를 불러오지 못했습니다.');
+  }catch(err){ showToast('서버 연결 실패 — 설정을 확인해 주세요.'); }
+}
+
+function renderDeployment(){
+  renderBusSection();
+  renderTeamSection();
+}
+
+function renderBusSection(){
+  const buses = deployCache.busInfo.length ? deployCache.busInfo.map(b=>b.bus) : ['1호차','2호차'];
+  document.getElementById('busSection').innerHTML = buses.map(bus=>{
+    const info = deployCache.busInfo.find(b=>b.bus===bus) || {};
+    const members = deployCache.busMembers.filter(m=>m.bus===bus);
+    const teams = [...new Set(members.map(m=>m.team))].sort((a,b)=>TEAM_ORDER.indexOf(a)-TEAM_ORDER.indexOf(b));
+    const teamHtml = teams.map(team=>{
+      const list = members.filter(m=>m.team===team).sort((a,b)=>(b.leader-a.leader));
+      const addBtn = isAdmin ? `<button class="addmini" onclick="openDeployAdd('bus','${bus}','${team}')">+ ${team} 인원 추가</button>` : '';
+      return `<div style="margin-top:8px;"><b style="font-size:13px;color:var(--brand-deep);">${team}</b>
+        <div class="memberwrap" style="margin-top:4px;">${list.map(m=>memberChip('bus', m)).join('')}</div>${addBtn}</div>`;
+    }).join('');
+    const editBtn = isAdmin ? `<button class="busedit" onclick="openBusEdit('${bus}')">✎ 버스 정보 수정</button>` : '';
+    return `<div class="busbox">
+      <div style="display:flex;justify-content:space-between;align-items:center;"><b>${bus} · ${info.total||'?'}명</b>${editBtn}</div>
+      <div class="busmeta"><b>기사</b> ${info.driverName||'-'} ${info.driverPhone||''} · ${info.plate||''}</div>
+      <div class="busmeta"><b>차장</b> ${info.conductor||'-'}</div>
+      <div class="busmeta"><b>수령물품</b> ${info.items||'-'}</div>
+      ${teamHtml}
+    </div>`;
+  }).join('');
+}
+
+function renderTeamSection(){
+  const teams = deployCache.teamMembers.length
+    ? [...new Set(deployCache.teamMembers.map(m=>m.team))].sort((a,b)=>TEAM_ORDER.indexOf(a)-TEAM_ORDER.indexOf(b))
+    : TEAM_ORDER.filter(t=>t!=='리더십');
+  document.getElementById('teamSection').innerHTML = teams.map(team=>{
+    const list = deployCache.teamMembers.filter(m=>m.team===team).sort((a,b)=>(b.leader-a.leader));
+    const addBtn = isAdmin ? `<button class="addmini" onclick="openDeployAdd('team','', '${team}')">+ ${team} 인원 추가</button>` : '';
+    return `<div class="teamblock">
+      <div class="tb-head"><b>${team}</b><span class="tb-count">${list.length}명</span></div>
+      <div class="memberwrap">${list.map(m=>memberChip('team', m)).join('')}</div>
+      ${addBtn}
+    </div>`;
+  }).join('');
+}
+
+/* 관리자: 로그인 */
+function openAdminLogin(){ document.getElementById('adminLoginBg').classList.add('show'); document.getElementById('adminLoginSheet').classList.add('show'); }
+function closeAdminLogin(){ document.getElementById('adminLoginBg').classList.remove('show'); document.getElementById('adminLoginSheet').classList.remove('show'); document.getElementById('adminPwInput').value=''; }
+async function submitAdminLogin(){
+  const pw = document.getElementById('adminPwInput').value.trim();
+  if(!pw){ showToast('비밀번호를 입력해 주세요.'); return; }
+  if(!getGasUrl()){ showToast('먼저 ⚙ 설정에서 서버 주소를 입력해 주세요.'); return; }
+  try{
+    const res = await jsonp({action:'adminCheckPw', pw:pw});
+    if(res && res.success){
+      adminPw = pw; isAdmin = true;
+      document.getElementById('adminGateOff').style.display='none';
+      document.getElementById('adminGateOn').style.display='block';
+      document.getElementById('inviteAdminGateOff').style.display='none';
+      document.getElementById('inviteAdminGateOn').style.display='block';
+      closeAdminLogin();
+      showToast('관리자 모드가 켜졌습니다.');
+      renderDeployment();
+      renderPeople();
+    } else showToast('비밀번호가 올바르지 않습니다.');
+  }catch(err){ showToast('네트워크 오류'); }
+}
+function exitAdmin(){
+  isAdmin = false; adminPw = '';
+  document.getElementById('adminGateOff').style.display='block';
+  document.getElementById('adminGateOn').style.display='none';
+  document.getElementById('inviteAdminGateOff').style.display='block';
+  document.getElementById('inviteAdminGateOn').style.display='none';
+  renderDeployment();
+  renderPeople();
+}
+
+/* 관리자: 이름 추가 */
+function openDeployAdd(target, bus, team){
+  deployAddCtx = {target, bus, team};
+  document.getElementById('deployAddTitle').textContent = `+ ${team} 인원 추가`;
+  document.getElementById('deployAddName').value='';
+  document.getElementById('deployAddColor').innerHTML = COLOR_PALETTE.map(c=>`<option value="${c.value}">${c.label}</option>`).join('');
+  document.getElementById('deployAddBg').classList.add('show'); document.getElementById('deployAddSheet').classList.add('show');
+}
+function closeDeployAdd(){ document.getElementById('deployAddBg').classList.remove('show'); document.getElementById('deployAddSheet').classList.remove('show'); }
+async function submitDeployAdd(){
+  const name = document.getElementById('deployAddName').value.trim();
+  const color = document.getElementById('deployAddColor').value;
+  if(!name){ showToast('이름을 입력해 주세요.'); return; }
+  try{
+    const res = await jsonp({action:'adminAddMember', target:deployAddCtx.target, bus:deployAddCtx.bus, team:deployAddCtx.team, name:name, leader:'false', color:color, pw:adminPw});
+    if(res && res.success){ showToast('추가되었습니다.'); closeDeployAdd(); loadDeployment(); }
+    else showToast(res && res.error ? res.error : '추가 실패');
+  }catch(err){ showToast('네트워크 오류'); }
+}
+async function adminRemoveMember(target, row){
+  if(!confirm('이 사람을 명단에서 삭제할까요?')) return;
+  try{
+    const res = await jsonp({action:'adminRemoveMember', target:target, row:row, pw:adminPw});
+    if(res && res.success){ showToast('삭제되었습니다.'); loadDeployment(); }
+    else showToast(res && res.error ? res.error : '삭제 실패');
+  }catch(err){ showToast('네트워크 오류'); }
+}
+async function adminSetColor(target, row, color){
+  try{
+    const res = await jsonp({action:'adminSetColor', target:target, row:row, color:color, pw:adminPw});
+    if(res && res.success){ showToast('색상이 변경되었습니다.'); loadDeployment(); }
+    else showToast(res && res.error ? res.error : '변경 실패');
+  }catch(err){ showToast('네트워크 오류'); }
+}
+
+/* 관리자: 버스 정보 수정 */
+function openBusEdit(bus){
+  busEditCtx = bus;
+  const info = deployCache.busInfo.find(b=>b.bus===bus) || {};
+  document.getElementById('busEditTitle').textContent = `${bus} 정보 수정`;
+  document.getElementById('busEditTotal').value = info.total||'';
+  document.getElementById('busEditDriverName').value = info.driverName||'';
+  document.getElementById('busEditDriverPhone').value = info.driverPhone||'';
+  document.getElementById('busEditPlate').value = info.plate||'';
+  document.getElementById('busEditConductor').value = info.conductor||'';
+  document.getElementById('busEditItems').value = info.items||'';
+  document.getElementById('busEditBg').classList.add('show'); document.getElementById('busEditSheet').classList.add('show');
+}
+function closeBusEdit(){ document.getElementById('busEditBg').classList.remove('show'); document.getElementById('busEditSheet').classList.remove('show'); }
+async function submitBusEdit(){
+  try{
+    const res = await jsonp({
+      action:'adminSaveBusInfo', bus:busEditCtx, pw:adminPw,
+      total: document.getElementById('busEditTotal').value.trim(),
+      driverName: document.getElementById('busEditDriverName').value.trim(),
+      driverPhone: document.getElementById('busEditDriverPhone').value.trim(),
+      plate: document.getElementById('busEditPlate').value.trim(),
+      conductor: document.getElementById('busEditConductor').value.trim(),
+      items: document.getElementById('busEditItems').value.trim(),
+    });
+    if(res && res.success){ showToast('저장되었습니다.'); closeBusEdit(); loadDeployment(); }
+    else showToast(res && res.error ? res.error : '저장 실패');
+  }catch(err){ showToast('네트워크 오류'); }
+}
+
+/* ===================== 예배 데이터 ===================== */
 const WORSHIP=[
   ['찬양','주가 일하시네 / 하나님의 부르심','이창권 순장'],
   ['대표기도','','오명 대표장로'],
@@ -376,7 +605,9 @@ document.getElementById('worshipTable').innerHTML = WORSHIP.map(w=>
   `<tr><td>${w[0]}</td><td>${w[1]}</td><td>${w[2]}</td></tr>`).join('');
 
 /* ===================== 초대·체크 기능 (Google Apps Script 연동) ===================== */
-const TEAMS = ['안내팀','오병이어팀','꽃단장팀','발지압팀','추나요법팀','소망카페팀','소망놀이팀','촬영팀','소망택배팀'];
+const TEAMS = ['안내팀','오병이어팀','꽃단장팀','발지압팀','추나요법팀','소망카페팀','소망놀이팀','보수팀','촬영팀','소망택배팀'];
+const TEAM_SHORT = {'오병이어팀':'오병','꽃단장팀':'꽃단','발지압팀':'발지','추나요법팀':'추나','소망카페팀':'카페','소망놀이팀':'놀이','보수팀':'보수','촬영팀':'촬영','소망택배팀':'택배','안내팀':'출석'};
+const VISIT_TEAMS = TEAMS.filter(t=>t!=='안내팀'); // 방문 체험 대상 9개 팀(안내팀=출석은 제외)
 let currentTeam = TEAMS[0];
 let rosterCache = [];
 
@@ -429,28 +660,48 @@ function renderPeople(){
   document.getElementById('progNum').textContent = `${checkedCount}/${rosterCache.length}`;
   document.getElementById('peopleList').innerHTML = list.map(p=>{
     const c = p.checks[currentTeam] || {checked:false,time:''};
-    return `<li class="prow">
-      <div class="pinfo"><div class="pname">${p.name}${p.age?(' ('+p.age+')'):''}</div>
-      <div class="pmeta">${p.note||''}${c.time?(' · '+c.time):''}</div></div>
-      <button class="chkbtn${c.checked?' on':''}" onclick="toggleCheck(${p.row}, this)">${c.checked ? '완료✓' : (currentTeam==='안내팀'?'출석':'방문')}</button>
+    // 팀별 체험 현황 배지 — 이 방문자가 어느 팀을 이미 체험했는지 누구나 실시간으로 한눈에 확인
+    // (중복 체험 방지 + 전체 팀 체험 유도 목적)
+    const doneCount = VISIT_TEAMS.filter(t=>p.checks[t] && p.checks[t].checked).length;
+    const badges = VISIT_TEAMS.map(t=>{
+      const done = p.checks[t] && p.checks[t].checked;
+      return `<span class="tpdot${done?' done':''}" title="${t} ${done?'체험 완료':'미체험'}">${TEAM_SHORT[t]||t[0]}</span>`;
+    }).join('');
+    let actionHtml;
+    if(isAdmin){
+      // 관리자: 이 사람의 모든 팀(출석 포함) 체크를 이 자리에서 바로 수정 가능
+      actionHtml = `<div class="adminmatrix">${TEAMS.map(t=>{
+        const cc = p.checks[t] && p.checks[t].checked;
+        return `<button class="adminchk${cc?' on':''}" onclick="toggleCheck(${p.row}, '${t}', this)">${TEAM_SHORT[t]||t}</button>`;
+      }).join('')}</div>`;
+    } else {
+      actionHtml = `<button class="chkbtn${c.checked?' on':''}" onclick="toggleCheck(${p.row}, currentTeam, this)">${c.checked ? '완료✓' : (currentTeam==='안내팀'?'출석':'방문')}</button>`;
+    }
+    return `<li class="prow${isAdmin?' admin':''}">
+      <div class="pinfo">
+        <div class="pname">${p.name}${p.age?(' ('+p.age+')'):''}</div>
+        <div class="pmeta">${p.note||''}${c.time?(' · '+c.time):''}</div>
+        <div class="teamprogress">${badges}<span class="tp-count">${doneCount}/${VISIT_TEAMS.length}팀 체험</span></div>
+      </div>
+      ${actionHtml}
     </li>`;
   }).join('') || '<li class="prow"><div class="pinfo">표시할 사람이 없습니다.</div></li>';
 }
 
-async function toggleCheck(row, btn){
+async function toggleCheck(row, team, btn){
   const person = rosterCache.find(p=>p.row===row);
   if(!person) return;
-  const cur = person.checks[currentTeam] || {checked:false};
+  const cur = person.checks[team] || {checked:false};
   const next = !cur.checked;
-  btn.disabled = true;
+  if(btn) btn.disabled = true;
   try{
-    const res = await jsonp({action:'setCheck', row:row, team:currentTeam, checked: next});
+    const res = await jsonp({action:'setCheck', row:row, team:team, checked: next});
     if(res && res.success){
-      person.checks[currentTeam] = { checked: next, time: next ? new Date().toLocaleString('ko-KR') : '' };
+      person.checks[team] = { checked: next, time: next ? new Date().toLocaleString('ko-KR') : '' };
       renderPeople();
     } else showToast('저장 실패');
   }catch(err){ showToast('네트워크 오류로 저장하지 못했습니다.'); }
-  btn.disabled = false;
+  if(btn) btn.disabled = false;
 }
 
 /* 현장 등록 */
