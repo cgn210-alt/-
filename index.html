@@ -755,6 +755,14 @@ const VISIT_TEAMS = TEAMS.filter(t=>t!=='안내팀'); // 방문 체험 대상 9�
 let currentTeam = TEAMS[0];
 let rosterCache = [];
 
+// 목사·사모·이장(비고란에 표시가 있는 분들)은 원래 순서를 그대로 유지하고,
+// 그 뒤 일반 마을주민(비고란이 비어있는 분들)만 가나다순으로 정렬합니다.
+function getSortedRoster(){
+  const special = rosterCache.filter(p=>p.note);
+  const rest = rosterCache.filter(p=>!p.note).slice().sort((a,b)=>(a.name||'').localeCompare(b.name||'', 'ko'));
+  return special.concat(rest);
+}
+
 // 기본 서버 주소 — 여기에 직접 넣어두면 사용자가 ⚙ 설정을 건드릴 필요가 없습니다.
 // Apps Script를 "새 배포"(새 버전이 아님)로 다시 배포해서 URL이 바뀐 경우에만 이 값을 수정하세요.
 const DEFAULT_GAS_URL = 'https://script.google.com/macros/s/AKfycbyrQ5FWd8IwTQFP9QZ-GK_YlMw8HeNxRpmz7gBVB_5s5gZOzA6S15xvXce0gdpV9ZME/exec';
@@ -829,7 +837,7 @@ function renderMasterTable(){
   const wrap = document.getElementById('masterTableWrap');
   if(!rosterCache.length){ wrap.innerHTML = '<p style="font-size:12.5px;color:var(--ink-soft);">불러온 명단이 없습니다.</p>'; return; }
   const header = `<tr><th>이름</th>${TEAMS.map(t=>`<th>${TEAM_SHORT[t]||t}</th>`).join('')}</tr>`;
-  const rows = rosterCache.map(p=>{
+  const rows = getSortedRoster().map(p=>{
     const cells = TEAMS.map(t=>{
       const done = p.checks[t] && p.checks[t].checked;
       const cls = 'mt-check' + (done?'':' mt-empty') + (isAdmin?' clickable':'');
@@ -843,7 +851,7 @@ function renderMasterTable(){
 
 function renderPeople(){
   const kw = document.getElementById('searchBox').value.trim();
-  const list = rosterCache.filter(p=>!kw || p.name.includes(kw));
+  const list = getSortedRoster().filter(p=>!kw || p.name.includes(kw));
   const checkedCount = rosterCache.filter(p=>p.checks[currentTeam] && p.checks[currentTeam].checked).length;
   document.getElementById('progNum').textContent = `${checkedCount}/${rosterCache.length}`;
   document.getElementById('peopleList').innerHTML = list.map(p=>{
