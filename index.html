@@ -122,12 +122,12 @@
 
   /* 예배 */
   .worshipline{list-style:none;margin:0;padding:0;}
-  .worshipline li{display:flex;gap:12px;padding:9px 0;border-bottom:1px dashed var(--line);}
+  .worshipline li{padding:9px 0;border-bottom:1px dashed var(--line);}
   .worshipline li:last-child{border-bottom:none;}
-  .worshipline .wl-label{flex:none;width:66px;font-weight:800;color:var(--brand-deep);font-size:13px;padding-top:1px;}
-  .worshipline .wl-content{flex:1;min-width:0;}
-  .worshipline .wl-content b{font-size:14.5px;display:block;}
-  .worshipline .wl-content small{display:block;color:var(--ink-soft);font-size:12.5px;margin-top:2px;}
+  .worshipline .wl-top{display:flex;justify-content:space-between;align-items:baseline;gap:10px;}
+  .worshipline .wl-label{font-weight:800;color:var(--brand-deep);font-size:13px;flex:none;}
+  .worshipline .wl-presenter{color:var(--ink-soft);font-size:12.5px;text-align:right;white-space:nowrap;}
+  .worshipline .wl-content{font-size:14.5px;font-weight:700;margin-top:3px;}
   .versebox{background:var(--brand-soft);border-radius:12px;padding:12px 14px;font-size:13px;color:#5a4a72;line-height:1.6;margin-top:6px;}
   .scoregallery img{width:100%;border-radius:12px;margin-bottom:10px;cursor:zoom-in;box-shadow:var(--shadow);}
 
@@ -605,7 +605,7 @@ const WORSHIP=[
   ['축도','','노치형 목사'],
 ];
 document.getElementById('worshipTable').innerHTML = WORSHIP.map(w=>
-  `<li><span class="wl-label">${w[0]}</span><span class="wl-content"><b>${w[1]||'—'}</b>${w[2]?`<small>${w[2]}</small>`:''}</span></li>`).join('');
+  `<li><div class="wl-top"><span class="wl-label">${w[0]}</span><span class="wl-presenter">${w[2]||''}</span></div><div class="wl-content">${w[1]||'—'}</div></li>`).join('');
 
 /* ===================== 초대·체크 기능 (Google Apps Script 연동) ===================== */
 const TEAMS = ['안내팀','오병이어팀','꽃단장팀','발지압팀','추나요법팀','소망카페팀','소망놀이팀','보수팀','촬영팀','소망택배팀'];
