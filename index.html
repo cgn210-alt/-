@@ -157,6 +157,7 @@
   .modal-bg.show{display:flex;}
   .modal-bg img{max-width:100%;max-height:100%;border-radius:10px;cursor:zoom-in;touch-action:none;will-change:transform;}
   .modal-hint{position:fixed;left:50%;bottom:18px;transform:translateX(-50%);background:rgba(0,0,0,.6);color:#fff;font-size:12px;padding:6px 14px;border-radius:20px;z-index:101;pointer-events:none;}
+  .modal-close{position:fixed;top:calc(14px + env(safe-area-inset-top));right:14px;background:rgba(255,255,255,.95);color:#2b2b30;border:none;border-radius:20px;padding:9px 16px;font-size:14px;font-weight:800;z-index:102;cursor:pointer;box-shadow:0 2px 10px rgba(0,0,0,.3);}
 
   .sheet-bg{position:fixed;inset:0;background:rgba(0,0,0,.4);opacity:0;pointer-events:none;transition:.2s;z-index:90;}
   .sheet-bg.show{opacity:1;pointer-events:auto;}
@@ -310,6 +311,7 @@
 
 <!-- 이미지 확대 모달 -->
 <div class="modal-bg" id="imgModal" onclick="closeImageModal()">
+  <button class="modal-close" onclick="event.stopPropagation(); closeImageModal();">✕ 닫기</button>
   <img id="modalImg" src="" onclick="toggleImageZoom(event)">
   <span class="modal-hint" id="modalHint">손가락으로 오므리거나 벌려서 확대·축소하세요</span>
 </div>
