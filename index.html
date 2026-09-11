@@ -771,7 +771,7 @@ function jsonp(params){
     s.src=url+sep+qs+'&callback='+cb;
     s.onerror=function(){ if(!done){ const u=s.src; cleanup(); reject(new Error('network 요청 실패 — 주소: '+u)); } };
     document.body.appendChild(s);
-    setTimeout(()=>{ if(!done){ const u=s.src; cleanup(); reject(new Error('timeout(12초 응답없음) — 주소: '+u)); } },12000);
+    setTimeout(()=>{ if(!done){ const u=s.src; cleanup(); reject(new Error('timeout(35초 응답없음) — 주소: '+u)); } },35000);
   });
 }
 
