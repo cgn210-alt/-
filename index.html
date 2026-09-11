@@ -596,6 +596,17 @@ document.getElementById('panel-event').classList.add('active');
 // 관리자가 수정했을 수 있는 최신 내용을 한 번 불러옵니다.
 window.addEventListener('load', function(){ loadEvent(); });
 
+/* 카카오톡 인앱 브라우저에서 "Chrome으로 열기"로 넘어온 뒤, 상단 탭을 눌러 이동하다가
+   기기의 뒤로가기 버튼을 누르면 페이지 히스토리가 1개뿐이라 앱을 완전히 벗어나
+   카카오톡의 안내 화면으로 돌아가 버리는 문제가 있었습니다.
+   탭을 클릭할 때마다 히스토리를 쌓지 않고, 방어용 항목을 1개만 유지하는 방식이라
+   예전에 있었던 "엉뚱한 화면으로 튀는" 부작용 없이 뒤로가기 1회는 앱 화면에 그대로
+   머물도록 합니다. */
+history.pushState({ guard: true }, '', location.href);
+window.addEventListener('popstate', function(){
+  history.pushState({ guard: true }, '', location.href);
+});
+
 /* ===================== 3. 행사 데이터 ===================== */
 const EVENT_TIMELINE=[
   ['06:00','출발','서빙고 온누리 교회 앞 주차장'],
