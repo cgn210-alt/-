@@ -217,6 +217,14 @@
       <div class="rolenotice">※ 팀명 옆 도형·색상은 체험 후 어르신께 부착해 드리는 팀별 스티커와 동일합니다.</div>
       <div class="rolegrid" id="roleGrid"></div>
     </div>
+    <div class="card">
+      <div class="card-head"><span class="dot"></span><h2>⚙ 관리자</h2></div>
+      <div id="planAdminGateOff"><button class="addpersonbtn" onclick="openAdminLogin()">🔒 관리자 모드로 편집하기</button></div>
+      <div id="planAdminGateOn" style="display:none;">
+        <p style="font-size:12.5px;color:var(--ok);font-weight:700;">✓ 관리자 모드 (팀별 역할 내용 직접 수정 가능)</p>
+        <button class="addpersonbtn" onclick="exitAdmin()">관리자 모드 종료</button>
+      </div>
+    </div>
   </div>
 
   <!-- 5. 배치 -->
@@ -721,6 +729,8 @@ async function submitAdminLogin(){
       document.getElementById('adminGateOn').style.display='block';
       document.getElementById('inviteAdminGateOff').style.display='none';
       document.getElementById('inviteAdminGateOn').style.display='block';
+      document.getElementById('planAdminGateOff').style.display='none';
+      document.getElementById('planAdminGateOn').style.display='block';
       closeAdminLogin();
       showToast('관리자 모드가 켜졌습니다.');
       renderDeployment();
@@ -736,6 +746,8 @@ function exitAdmin(){
   document.getElementById('adminGateOn').style.display='none';
   document.getElementById('inviteAdminGateOff').style.display='block';
   document.getElementById('inviteAdminGateOn').style.display='none';
+  document.getElementById('planAdminGateOff').style.display='block';
+  document.getElementById('planAdminGateOn').style.display='none';
   renderDeployment();
   renderPeople();
   renderMasterTable();
