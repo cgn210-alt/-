@@ -16,6 +16,7 @@ var SHEET_BUSINFO = '버스정보';
 var SHEET_BUSMEMBER = '버스인원';
 var SHEET_TEAMMEMBER = '팀별인원';
 var SHEET_TEAMROLE = '팀별역할';
+var SHEET_EVENT = '행사일정';
 
 // 활동체크(출석·방문) 팀장 전용 비밀번호 — 관리자 비밀번호와는 별개의 가벼운 비밀번호입니다.
 // 이 비밀번호를 아는 사람만 아래 CHECK_RESTRICTED_TEAMS 팀의 체크를 할 수 있습니다.
@@ -46,6 +47,10 @@ function doGet(e) {
   if (action === 'adminSetCompanion') return handleAdminSetCompanion(params);
   if (action === 'getRoles')          return handleGetRoles();
   if (action === 'adminEditRole')     return handleAdminEditRole(params);
+  if (action === 'getEvent')          return handleGetEvent();
+  if (action === 'adminEditEvent')    return handleAdminEditEvent(params);
+  if (action === 'adminAddEvent')     return handleAdminAddEvent(params);
+  if (action === 'adminDeleteEvent')  return handleAdminDeleteEvent(params);
 
   return jsonRes({ success: false, error: 'unknown action' });
 }
@@ -450,9 +455,100 @@ function handleAdminEditRole(p) {
   return jsonRes({ success: true });
 }
 
+// ================================================================
+// 행사일정 / 공지사항("행사일정" 탭) — 관리자 수정·추가·삭제 가능
+// ================================================================
+function ensureEventSheet_() {
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var sheet = ss.getSheetByName(SHEET_EVENT);
+  if (!sheet) {
+    sheet = ss.insertSheet(SHEET_EVENT);
+    sheet.appendRow(['구분', '시간', '제목', '내용']);
+    sheet.setFrozenRows(1);
+    var defaults = [
+      ['timeline', '06:00', '출발', '서빙고 온누리 교회 앞 주차장'],
+      ['timeline', '09:00', '도착', '경북 상주시 소망교회'],
+      ['timeline', '10:00', '예배', '소망교회 본당 / 오리엔테이션'],
+      ['timeline', '11:00', '준비', '안내, 식사, 미용, 지압, 교정, 카페, 놀이, 보수, 촬영, 전도'],
+      ['timeline', '11:30', '잔치', '안내, 오병이어팀, 꽃단장팀, 발지압팀, 추나요법팀, 소망카페팀, 소망놀이팀, 보수팀, 촬영팀, 소망택배팀'],
+      ['timeline', '17:00', '초대', '소망교회 본당 / 축복의 시간'],
+      ['timeline', '17:30', '마을출발', '상주점 다담뜰한식뷔페 (054-533-2118)'],
+      ['timeline', '18:00', '식당도착', '저녁식사'],
+      ['timeline', '19:00', '복귀', '상주점 다담뜰한식뷔페 출발'],
+      ['timeline', '21:00', '도착', '서빙고 온누리교회'],
+      ['notice', '', '', '출발시간 엄수 : 5시 50분까지 서빙고 온누리 교회 앞 주차장으로 집결'],
+      ['notice', '', '', '복장 : 자유복장'],
+      ['notice', '', '', '개별 준비 : 긴팔, 점퍼, 정기 복용 약품'],
+      ['notice', '', '', '섬김 코너별 팀장님의 인솔에 따라 준비와 진행을 시행'],
+      ['notice', '', '', '어르신들의 섬김은 시작부터 끝까지 따뜻한 태도로 섬김'],
+      ['notice', '', '', '모든 운영 관련 지원, 문의, 운영 관련 사항은 본부팀에 확인'],
+      ['notice', '', '', '오병이어팀 여벌의 옷 준비(고기냄새) / 천막 없이 섬김으로 모자 준비 필수'],
+      ['notice', '', '', '버스 1호 차장 주웅현 / 버스 2호 차장 정두식 — 탑승자 명단 확인하여 인원 체크']
+    ];
+    sheet.getRange(2, 1, defaults.length, 4).setValues(defaults);
+  }
+  return sheet;
+}
+
+// ── 공개: 행사일정 + 공지사항 불러오기 ────────────────────────
+function handleGetEvent() {
+  var items = sheetRows_(ensureEventSheet_()).map(function (r) {
+    return { row: r.row, type: r.v[0] || 'timeline', time: r.v[1] || '', label: r.v[2] || '', detail: r.v[3] || '' };
+  });
+  return jsonRes({ success: true, items: items });
+}
+
+// ── 관리자: 행사일정/공지사항 수정 ────────────────────────────
+function handleAdminEditEvent(p) {
+  if (!checkAdmin_(p.pw)) return jsonRes({ success: false, error: '비밀번호가 올바르지 않습니다.' });
+  var row = parseInt(p.row || '0', 10);
+  if (!row || row < 2) return jsonRes({ success: false, error: '잘못된 행 번호' });
+  var lock = LockService.getScriptLock();
+  lock.waitLock(10000);
+  try {
+    var sheet = ensureEventSheet_();
+    sheet.getRange(row, 2, 1, 3).setValues([[p.time || '', p.label || '', p.detail || '']]);
+  } finally {
+    lock.releaseLock();
+  }
+  return jsonRes({ success: true });
+}
+
+// ── 관리자: 행사일정/공지사항 추가 ────────────────────────────
+function handleAdminAddEvent(p) {
+  if (!checkAdmin_(p.pw)) return jsonRes({ success: false, error: '비밀번호가 올바르지 않습니다.' });
+  var lock = LockService.getScriptLock();
+  lock.waitLock(10000);
+  var newRow;
+  try {
+    var sheet = ensureEventSheet_();
+    var type = (p.type === 'notice') ? 'notice' : 'timeline';
+    sheet.appendRow([type, p.time || '', p.label || '', p.detail || '']);
+    newRow = sheet.getLastRow();
+  } finally {
+    lock.releaseLock();
+  }
+  return jsonRes({ success: true, row: newRow });
+}
+
+// ── 관리자: 행사일정/공지사항 삭제 ────────────────────────────
+function handleAdminDeleteEvent(p) {
+  if (!checkAdmin_(p.pw)) return jsonRes({ success: false, error: '비밀번호가 올바르지 않습니다.' });
+  var row = parseInt(p.row || '0', 10);
+  if (!row || row < 2) return jsonRes({ success: false, error: '잘못된 행 번호' });
+  var lock = LockService.getScriptLock();
+  lock.waitLock(10000);
+  try {
+    ensureEventSheet_().deleteRow(row);
+  } finally {
+    lock.releaseLock();
+  }
+  return jsonRes({ success: true });
+}
+
 // ── 초기 인원배치 시딩 (Apps Script 편집기에서 최초 1회 직접 실행) ─
 // 제공해주신 버스배치표·팀별 인원배치표 이미지를 기준으로 입력했습니다.
-// 색상(오렌지·녹색 등)은 이미지에서 정확히 판독하지 못해 우선 기본색(빈 값)으로
+// 색상(오렌지·녹색 등)은 이미지에서 정확히 판독하지 못해 우선 기본값(빈 값)으로
 // 두었으니, 배포 후 관리자 페이지에서 직접 지정해 주세요.
 // [확인필요] 표시 항목은 두 이미지(버스별/팀별) 간 인원수가 서로 맞지 않아
 // 원본과 대조가 필요합니다.

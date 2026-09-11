@@ -203,10 +203,20 @@
     <div class="card">
       <div class="card-head"><span class="dot"></span><h2>행사 일정</h2></div>
       <ul class="tline" id="eventTimeline"></ul>
+      <button id="eventAddTimelineBtn" class="addmini" style="display:none;" onclick="openEventAdd('timeline')">+ 일정 추가</button>
     </div>
     <div class="card">
       <div class="card-head"><span class="dot"></span><h2>공지사항</h2></div>
       <ul class="noticelist" id="eventNotice"></ul>
+      <button id="eventAddNoticeBtn" class="addmini" style="display:none;" onclick="openEventAdd('notice')">+ 공지 추가</button>
+    </div>
+    <div class="card">
+      <div class="card-head"><span class="dot"></span><h2>⚙ 관리자</h2></div>
+      <div id="eventAdminGateOff"><button class="addpersonbtn" onclick="openAdminLogin()">🔒 관리자 모드로 편집하기</button></div>
+      <div id="eventAdminGateOn" style="display:none;">
+        <p style="font-size:12.5px;color:var(--ok);font-weight:700;">✓ 관리자 모드 (행사 일정·공지사항 직접 수정 가능)</p>
+        <button class="addpersonbtn" onclick="exitAdmin()">관리자 모드 종료</button>
+      </div>
     </div>
   </div>
 
@@ -407,6 +417,32 @@
   </div>
 </div>
 
+<!-- 행사일정/공지사항 수정 바텀시트 (관리자) -->
+<div class="sheet-bg" id="eventEditBg" onclick="closeEventEdit()"></div>
+<div class="sheet" id="eventEditSheet">
+  <h3 id="eventEditTitle">✎ 수정</h3>
+  <input id="eventEditTime" placeholder="시간 (예: 06:00, 공지사항은 비워두세요)">
+  <input id="eventEditLabel" placeholder="제목 (예: 출발, 공지사항은 비워두세요)">
+  <input id="eventEditDetail" placeholder="내용">
+  <div class="row">
+    <button class="cancel" onclick="closeEventEdit()">취소</button>
+    <button class="save" onclick="submitEventEdit()">저장</button>
+  </div>
+</div>
+
+<!-- 행사일정/공지사항 추가 바텀시트 (관리자) -->
+<div class="sheet-bg" id="eventAddBg" onclick="closeEventAdd()"></div>
+<div class="sheet" id="eventAddSheet">
+  <h3 id="eventAddTitle">+ 추가</h3>
+  <input id="eventAddTime" placeholder="시간 (예: 06:00)">
+  <input id="eventAddLabel" placeholder="제목 (예: 출발)">
+  <input id="eventAddDetail" placeholder="내용">
+  <div class="row">
+    <button class="cancel" onclick="closeEventAdd()">취소</button>
+    <button class="save" onclick="submitEventAdd()">추가</button>
+  </div>
+</div>
+
 <!-- 팀별역할 수정 바텀시트 (관리자) -->
 <div class="sheet-bg" id="roleEditBg" onclick="closeRoleEdit()"></div>
 <div class="sheet" id="roleEditSheet">
@@ -474,6 +510,9 @@ document.querySelectorAll('.tabbtn').forEach(btn=>{
     document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
     btn.classList.add('active');
     document.getElementById('panel-'+btn.dataset.tab).classList.add('active');
+    if(btn.dataset.tab==='event'){
+      loadEvent();
+    }
     if(btn.dataset.tab==='plan'){
       loadRoles();
     }
@@ -491,6 +530,9 @@ document.querySelectorAll('.tabbtn').forEach(btn=>{
 });
 document.querySelector('.tabbtn').classList.add('active');
 document.getElementById('panel-event').classList.add('active');
+// 처음 화면(행사일정)은 탭 클릭 없이 바로 보이므로, 스크립트 전체가 로드된 뒤
+// 관리자가 수정했을 수 있는 최신 내용을 한 번 불러옵니다.
+window.addEventListener('load', function(){ loadEvent(); });
 
 /* ===================== 3. 행사 데이터 ===================== */
 const EVENT_TIMELINE=[
@@ -515,9 +557,100 @@ const EVENT_NOTICE=[
   '오병이어팀 여벌의 옷 준비(고기냄새) / 천막 없이 섬김으로 모자 준비 필수',
   '버스 1호 차장 주웅현 / 버스 2호 차장 정두식 — 탑승자 명단 확인하여 인원 체크',
 ];
+// 기본(고정) 내용을 먼저 바로 보여주고, 서버에서 관리자가 수정한 최신 내용을 불러오면 교체합니다.
 document.getElementById('eventTimeline').innerHTML = EVENT_TIMELINE.map(t=>
   `<li><span class="tm">${t[0]}</span><span class="tx"><b>${t[1]}</b><small>${t[2]}</small></span></li>`).join('');
 document.getElementById('eventNotice').innerHTML = EVENT_NOTICE.map(n=>`<li>${n}</li>`).join('');
+
+let eventCache = null; // {timeline:[...], notice:[...]}
+let lastEventLoad = 0;
+let eventEditRow = null;
+let eventAddType = 'timeline';
+
+function renderEvent(){
+  if(!eventCache) return;
+  document.getElementById('eventAddTimelineBtn').style.display = isAdmin ? 'block' : 'none';
+  document.getElementById('eventAddNoticeBtn').style.display = isAdmin ? 'block' : 'none';
+  document.getElementById('eventTimeline').innerHTML = eventCache.timeline.map(t=>{
+    const editBtns = isAdmin ? `<button class="pmini" onclick="openEventEdit(${t.row})">✎</button><button class="pmini pmini-del" onclick="adminDeleteEvent(${t.row})">✕</button>` : '';
+    return `<li><span class="tm">${t.time}</span><span class="tx"><b>${t.label}${editBtns}</b><small>${t.detail}</small></span></li>`;
+  }).join('') || '<li><span class="tx">일정이 없습니다.</span></li>';
+  document.getElementById('eventNotice').innerHTML = eventCache.notice.map(n=>{
+    const editBtns = isAdmin ? `<button class="pmini" onclick="openEventEdit(${n.row})">✎</button><button class="pmini pmini-del" onclick="adminDeleteEvent(${n.row})">✕</button>` : '';
+    return `<li>${n.detail}${editBtns}</li>`;
+  }).join('') || '<li>공지사항이 없습니다.</li>';
+}
+async function loadEvent(force){
+  if(!force && eventCache && Date.now() - lastEventLoad < 8000) return;
+  if(!getGasUrl()) return;
+  try{
+    const res = await jsonp({action:'getEvent'});
+    if(res && res.success){
+      eventCache = { timeline: res.items.filter(i=>i.type==='timeline'), notice: res.items.filter(i=>i.type==='notice') };
+      lastEventLoad = Date.now();
+      renderEvent();
+    }
+  }catch(err){ /* 실패해도 위에 이미 표시된 기본 내용이 있으니 조용히 넘어갑니다 */ }
+}
+function openEventEdit(row){
+  const item = eventCache.timeline.concat(eventCache.notice).find(x=>x.row===row);
+  if(!item) return;
+  eventEditRow = row;
+  document.getElementById('eventEditTitle').textContent = item.type==='timeline' ? '✎ 일정 수정' : '✎ 공지 수정';
+  document.getElementById('eventEditTime').value = item.time || '';
+  document.getElementById('eventEditLabel').value = item.label || '';
+  document.getElementById('eventEditDetail').value = item.detail || '';
+  document.getElementById('eventEditBg').classList.add('show');
+  document.getElementById('eventEditSheet').classList.add('show');
+}
+function closeEventEdit(){
+  document.getElementById('eventEditBg').classList.remove('show');
+  document.getElementById('eventEditSheet').classList.remove('show');
+}
+async function submitEventEdit(){
+  const time = document.getElementById('eventEditTime').value.trim();
+  const label = document.getElementById('eventEditLabel').value.trim();
+  const detail = document.getElementById('eventEditDetail').value.trim();
+  try{
+    const res = await jsonp({action:'adminEditEvent', row:eventEditRow, time:time, label:label, detail:detail, pw:adminPw});
+    if(res && res.success){ showToast('수정되었습니다.'); closeEventEdit(); loadEvent(true); }
+    else showToast(res && res.error ? res.error : '수정 실패');
+  }catch(err){ showToast('네트워크 오류'); }
+}
+function openEventAdd(type){
+  eventAddType = type;
+  document.getElementById('eventAddTitle').textContent = type==='timeline' ? '+ 일정 추가' : '+ 공지 추가';
+  document.getElementById('eventAddTime').value = '';
+  document.getElementById('eventAddLabel').value = '';
+  document.getElementById('eventAddDetail').value = '';
+  document.getElementById('eventAddTime').style.display = type==='timeline' ? 'block' : 'none';
+  document.getElementById('eventAddLabel').style.display = type==='timeline' ? 'block' : 'none';
+  document.getElementById('eventAddBg').classList.add('show');
+  document.getElementById('eventAddSheet').classList.add('show');
+}
+function closeEventAdd(){
+  document.getElementById('eventAddBg').classList.remove('show');
+  document.getElementById('eventAddSheet').classList.remove('show');
+}
+async function submitEventAdd(){
+  const time = document.getElementById('eventAddTime').value.trim();
+  const label = document.getElementById('eventAddLabel').value.trim();
+  const detail = document.getElementById('eventAddDetail').value.trim();
+  if(!detail){ showToast('내용을 입력해 주세요.'); return; }
+  try{
+    const res = await jsonp({action:'adminAddEvent', type:eventAddType, time:time, label:label, detail:detail, pw:adminPw});
+    if(res && res.success){ showToast('추가되었습니다.'); closeEventAdd(); loadEvent(true); }
+    else showToast(res && res.error ? res.error : '추가 실패');
+  }catch(err){ showToast('네트워크 오류'); }
+}
+async function adminDeleteEvent(row){
+  if(!confirm('삭제할까요?')) return;
+  try{
+    const res = await jsonp({action:'adminDeleteEvent', row:row, pw:adminPw});
+    if(res && res.success){ showToast('삭제되었습니다.'); loadEvent(true); }
+    else showToast(res && res.error ? res.error : '삭제 실패');
+  }catch(err){ showToast('네트워크 오류'); }
+}
 
 /* ===================== 4. 계획 데이터 ===================== */
 /* shape/color는 체험 완료 시 어르신께 부착하는 실제 팀별 스티커(도형·색) 기준입니다.
@@ -731,12 +864,15 @@ async function submitAdminLogin(){
       document.getElementById('inviteAdminGateOn').style.display='block';
       document.getElementById('planAdminGateOff').style.display='none';
       document.getElementById('planAdminGateOn').style.display='block';
+      document.getElementById('eventAdminGateOff').style.display='none';
+      document.getElementById('eventAdminGateOn').style.display='block';
       closeAdminLogin();
       showToast('관리자 모드가 켜졌습니다.');
       renderDeployment();
       renderPeople();
       renderMasterTable();
       renderRoles();
+      renderEvent();
     } else showToast('비밀번호가 올바르지 않습니다.');
   }catch(err){ showToast('네트워크 오류'); }
 }
@@ -748,9 +884,12 @@ function exitAdmin(){
   document.getElementById('inviteAdminGateOn').style.display='none';
   document.getElementById('planAdminGateOff').style.display='block';
   document.getElementById('planAdminGateOn').style.display='none';
+  document.getElementById('eventAdminGateOff').style.display='block';
+  document.getElementById('eventAdminGateOn').style.display='none';
   renderDeployment();
   renderPeople();
   renderMasterTable();
+  renderEvent();
   renderRoles();
 }
 
