@@ -304,20 +304,27 @@ function handleAdminSaveBusInfo(p) {
 }
 
 // ── 관리자: 인원 추가 (target: 'bus' | 'team') ───────────────
+// 새로 추가된 행 번호를 함께 반환합니다 — 클라이언트가 전체 명단을
+// 다시 불러오지 않고 그 자리에서 바로 반영할 수 있어 응답이 빠릅니다.
 function handleAdminAddMember(p) {
   if (!checkAdmin_(p.pw)) return jsonRes({ success: false, error: '비밀번호가 올바르지 않습니다.' });
   var lock = LockService.getScriptLock();
   lock.waitLock(10000);
+  var newRow;
   try {
     if (p.target === 'bus') {
-      ensureBusMemberSheet_().appendRow([p.bus || '', p.team || '', p.name || '', p.leader === 'true', p.color || '']);
+      var sheet = ensureBusMemberSheet_();
+      sheet.appendRow([p.bus || '', p.team || '', p.name || '', p.leader === 'true', p.color || '']);
+      newRow = sheet.getLastRow();
     } else {
-      ensureTeamMemberSheet_().appendRow([p.team || '', p.name || '', p.leader === 'true', p.color || '']);
+      var sheet2 = ensureTeamMemberSheet_();
+      sheet2.appendRow([p.team || '', p.name || '', p.leader === 'true', p.color || '']);
+      newRow = sheet2.getLastRow();
     }
   } finally {
     lock.releaseLock();
   }
-  return jsonRes({ success: true });
+  return jsonRes({ success: true, row: newRow });
 }
 
 // ── 관리자: 인원 삭제 ────────────────────────────────────────

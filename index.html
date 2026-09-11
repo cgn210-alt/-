@@ -148,11 +148,9 @@
   .versebox{background:var(--brand-soft);border-radius:12px;padding:12px 14px;font-size:13px;color:#5a4a72;line-height:1.6;margin-top:6px;}
   .scoregallery img{width:100%;border-radius:12px;margin-bottom:10px;cursor:zoom-in;box-shadow:var(--shadow);}
 
-  .modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.8);display:none;align-items:center;justify-content:center;z-index:100;padding:16px;overflow:auto;}
+  .modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.8);display:none;align-items:center;justify-content:center;z-index:100;padding:16px;overflow:hidden;touch-action:none;}
   .modal-bg.show{display:flex;}
-  .modal-bg img{max-width:100%;max-height:100%;border-radius:10px;cursor:zoom-in;transition:max-width .15s,max-height .15s;}
-  .modal-bg.zoomed{align-items:flex-start;justify-content:flex-start;padding:0;}
-  .modal-bg.zoomed img{max-width:none;max-height:none;width:auto;height:auto;border-radius:0;cursor:zoom-out;}
+  .modal-bg img{max-width:100%;max-height:100%;border-radius:10px;cursor:zoom-in;touch-action:none;will-change:transform;}
   .modal-hint{position:fixed;left:50%;bottom:18px;transform:translateX(-50%);background:rgba(0,0,0,.6);color:#fff;font-size:12px;padding:6px 14px;border-radius:20px;z-index:101;pointer-events:none;}
 
   .sheet-bg{position:fixed;inset:0;background:rgba(0,0,0,.4);opacity:0;pointer-events:none;transition:.2s;z-index:90;}
@@ -308,7 +306,7 @@
 <!-- 이미지 확대 모달 -->
 <div class="modal-bg" id="imgModal" onclick="closeImageModal()">
   <img id="modalImg" src="" onclick="toggleImageZoom(event)">
-  <span class="modal-hint" id="modalHint">이미지를 탭하면 확대/축소됩니다</span>
+  <span class="modal-hint" id="modalHint">손가락으로 오므리거나 벌려서 확대·축소하세요</span>
 </div>
 
 <!-- 설정 바텀시트 -->
@@ -630,7 +628,15 @@ async function submitDeployAdd(){
   if(!name){ showToast('이름을 입력해 주세요.'); return; }
   try{
     const res = await jsonp({action:'adminAddMember', target:deployAddCtx.target, bus:deployAddCtx.bus, team:deployAddCtx.team, name:name, leader:'false', color:color, pw:adminPw});
-    if(res && res.success){ showToast('추가되었습니다.'); closeDeployAdd(); loadDeployment(); }
+    if(res && res.success){
+      // 서버 재조회 없이 로컬 캐시에 바로 추가 (응답 속도 개선)
+      const entry = deployAddCtx.target==='bus'
+        ? {row:res.row, bus:deployAddCtx.bus, team:deployAddCtx.team, name:name, leader:false, color:color}
+        : {row:res.row, team:deployAddCtx.team, name:name, leader:false, color:color};
+      (deployAddCtx.target==='bus' ? deployCache.busMembers : deployCache.teamMembers).push(entry);
+      renderDeployment();
+      showToast('추가되었습니다.'); closeDeployAdd();
+    }
     else showToast(res && res.error ? res.error : '추가 실패');
   }catch(err){ showToast('네트워크 오류'); }
 }
@@ -638,14 +644,27 @@ async function adminRemoveMember(target, row){
   if(!confirm('이 사람을 명단에서 삭제할까요?')) return;
   try{
     const res = await jsonp({action:'adminRemoveMember', target:target, row:row, pw:adminPw});
-    if(res && res.success){ showToast('삭제되었습니다.'); loadDeployment(); }
+    if(res && res.success){
+      // 시트에서 행이 삭제되면 아래 행들이 한 칸씩 위로 당겨지므로, 캐시의 행 번호도 함께 보정
+      const arr = target==='bus' ? deployCache.busMembers : deployCache.teamMembers;
+      const updated = arr.filter(m=>m.row!==row).map(m=> m.row>row ? Object.assign({}, m, {row:m.row-1}) : m);
+      if(target==='bus') deployCache.busMembers = updated; else deployCache.teamMembers = updated;
+      renderDeployment();
+      showToast('삭제되었습니다.');
+    }
     else showToast(res && res.error ? res.error : '삭제 실패');
   }catch(err){ showToast('네트워크 오류'); }
 }
 async function adminSetColor(target, row, color){
   try{
     const res = await jsonp({action:'adminSetColor', target:target, row:row, color:color, pw:adminPw});
-    if(res && res.success){ showToast('색상이 변경되었습니다.'); loadDeployment(); }
+    if(res && res.success){
+      const arr = target==='bus' ? deployCache.busMembers : deployCache.teamMembers;
+      const m = arr.find(x=>x.row===row);
+      if(m) m.color = color;
+      renderDeployment();
+      showToast('색상이 변경되었습니다.');
+    }
     else showToast(res && res.error ? res.error : '변경 실패');
   }catch(err){ showToast('네트워크 오류'); }
 }
@@ -665,17 +684,23 @@ function openBusEdit(bus){
 }
 function closeBusEdit(){ document.getElementById('busEditBg').classList.remove('show'); document.getElementById('busEditSheet').classList.remove('show'); }
 async function submitBusEdit(){
+  const payload = {
+    total: document.getElementById('busEditTotal').value.trim(),
+    driverName: document.getElementById('busEditDriverName').value.trim(),
+    driverPhone: document.getElementById('busEditDriverPhone').value.trim(),
+    plate: document.getElementById('busEditPlate').value.trim(),
+    conductor: document.getElementById('busEditConductor').value.trim(),
+    items: document.getElementById('busEditItems').value.trim(),
+  };
   try{
-    const res = await jsonp({
-      action:'adminSaveBusInfo', bus:busEditCtx, pw:adminPw,
-      total: document.getElementById('busEditTotal').value.trim(),
-      driverName: document.getElementById('busEditDriverName').value.trim(),
-      driverPhone: document.getElementById('busEditDriverPhone').value.trim(),
-      plate: document.getElementById('busEditPlate').value.trim(),
-      conductor: document.getElementById('busEditConductor').value.trim(),
-      items: document.getElementById('busEditItems').value.trim(),
-    });
-    if(res && res.success){ showToast('저장되었습니다.'); closeBusEdit(); loadDeployment(); }
+    const res = await jsonp(Object.assign({action:'adminSaveBusInfo', bus:busEditCtx, pw:adminPw}, payload));
+    if(res && res.success){
+      let info = deployCache.busInfo.find(b=>b.bus===busEditCtx);
+      if(info) Object.assign(info, payload);
+      else deployCache.busInfo.push(Object.assign({bus:busEditCtx}, payload));
+      renderDeployment();
+      showToast('저장되었습니다.'); closeBusEdit();
+    }
     else showToast(res && res.error ? res.error : '저장 실패');
   }catch(err){ showToast('네트워크 오류'); }
 }
@@ -848,7 +873,13 @@ async function submitPersonEdit(){
   if(!name){ showToast('이름을 입력해 주세요.'); return; }
   try{
     const res = await jsonp({action:'adminEditPerson', row:personEditRow, name:name, age:age, note:note, pw:adminPw});
-    if(res && res.success){ showToast('수정되었습니다.'); closePersonEdit(); loadRoster(); }
+    if(res && res.success){
+      // 서버 재조회 없이 로컬 캐시를 바로 수정 (응답 속도 개선)
+      const person = rosterCache.find(p=>p.row===personEditRow);
+      if(person){ person.name=name; person.age=age; person.note=note; }
+      renderPeople(); renderMasterTable();
+      showToast('수정되었습니다.'); closePersonEdit();
+    }
     else showToast(res && res.error ? res.error : '수정 실패');
   }catch(err){ showToast('네트워크 오류'); }
 }
@@ -858,7 +889,12 @@ async function adminDeletePerson(row){
   if(!confirm(`"${person.name}"님을 명단에서 완전히 삭제할까요?\n(그동안 체크된 출석·방문 기록도 함께 삭제됩니다)`)) return;
   try{
     const res = await jsonp({action:'adminDeletePerson', row:row, pw:adminPw});
-    if(res && res.success){ showToast('삭제되었습니다.'); loadRoster(); }
+    if(res && res.success){
+      // 시트에서 행이 삭제되면 아래 행들이 한 칸씩 위로 당겨지므로, 캐시의 행 번호도 함께 보정
+      rosterCache = rosterCache.filter(p=>p.row!==row).map(p=> p.row>row ? Object.assign({}, p, {row:p.row-1}) : p);
+      renderPeople(); renderMasterTable();
+      showToast('삭제되었습니다.');
+    }
     else showToast(res && res.error ? res.error : '삭제 실패');
   }catch(err){ showToast('네트워크 오류'); }
 }
@@ -894,59 +930,80 @@ function saveSettings(){
   loadRoster();
 }
 
-/* 이미지 확대 */
+/* ===================== 이미지 확대(핀치 줌 + 드래그 팬) ===================== */
+/* 브라우저 전체는 확대가 꺼져 있어(레이아웃 고정용) 이미지 확대 모달 안에서만
+   손가락 두 개로 오므리고 벌리는 제스처를 직접 계산해서 처리합니다. */
+let zScale=1, zX=0, zY=0;
+let pinchStartDist=0, pinchStartScale=1, pinchMidX=0, pinchMidY=0, pinchStartX=0, pinchStartY=0;
+let panActive=false, panStartClientX=0, panStartClientY=0, panStartX0=0, panStartY0=0;
+
+function zApply(withTransition){
+  const img = document.getElementById('modalImg');
+  img.style.transition = withTransition ? 'transform .2s ease' : 'none';
+  img.style.transform = `translate(${zX}px, ${zY}px) scale(${zScale})`;
+}
+function zReset(withTransition){
+  zScale=1; zX=0; zY=0;
+  zApply(withTransition);
+  document.getElementById('modalHint').style.display='block';
+}
+function touchDist(t1,t2){ return Math.hypot(t1.clientX-t2.clientX, t1.clientY-t2.clientY); }
+
 function openImage(src){
   const img = document.getElementById('modalImg');
-  img.style.cssText=''; // 이전 확대 상태로 남아있던 인라인 스타일 초기화
   img.src=src;
-  const modal = document.getElementById('imgModal');
-  modal.classList.remove('zoomed');
-  modal.classList.add('show');
+  zReset(false);
+  document.getElementById('imgModal').classList.add('show');
   document.getElementById('modalHint').style.display='block';
 }
 function closeImageModal(){
-  const img = document.getElementById('modalImg');
-  img.style.cssText='';
-  document.getElementById('imgModal').classList.remove('show','zoomed');
+  zReset(false);
+  document.getElementById('imgModal').classList.remove('show');
 }
-/* 이미지 확대/축소 — width/height를 그대로 바꾸면 뚝 끊겨 보여서,
-   transform:scale()로 부드럽게 확대한 뒤 실제 크기로 자연스럽게 전환합니다. */
+/* 마우스 클릭(데스크톱): 탭 한 번으로 2.2배 확대 ↔ 원래대로 */
 function toggleImageZoom(e){
   e.stopPropagation();
-  const modal = document.getElementById('imgModal');
-  const img = document.getElementById('modalImg');
-  if(img.dataset.animating === '1') return;
-  const zoomingIn = !modal.classList.contains('zoomed');
-
-  if(zoomingIn){
-    const startRect = img.getBoundingClientRect();
-    const targetW = img.naturalWidth, targetH = img.naturalHeight;
-    const scale = targetW / startRect.width;
-    img.dataset.animating = '1';
-    img.style.maxWidth='none'; img.style.maxHeight='none';
-    img.style.width=startRect.width+'px'; img.style.height=startRect.height+'px';
-    img.style.transformOrigin='center center';
-    img.style.transform='scale(1)';
-    document.getElementById('modalHint').style.display='none';
-    requestAnimationFrame(()=>{
-      requestAnimationFrame(()=>{
-        img.style.transition='transform .28s ease';
-        img.style.transform=`scale(${scale})`;
-      });
-    });
-    img.addEventListener('transitionend', function onEnd(){
-      img.removeEventListener('transitionend', onEnd);
-      img.style.transition=''; img.style.transform='';
-      img.style.width=targetW+'px'; img.style.height=targetH+'px';
-      modal.classList.add('zoomed');
-      img.dataset.animating = '0';
-    }, {once:true});
-  } else {
-    modal.classList.remove('zoomed');
-    img.style.cssText='';
-    document.getElementById('modalHint').style.display='block';
-  }
+  if(zScale>1.01){ zReset(true); }
+  else { zScale=2.2; zX=0; zY=0; zApply(true); document.getElementById('modalHint').style.display='none'; }
 }
+/* 터치(모바일): 두 손가락 핀치로 확대/축소, 확대된 상태에서 한 손가락으로 이동 */
+(function initPinchZoom(){
+  const img = document.getElementById('modalImg');
+  img.addEventListener('touchstart', function(e){
+    if(e.touches.length===2){
+      e.preventDefault();
+      pinchStartDist = touchDist(e.touches[0], e.touches[1]);
+      pinchStartScale = zScale;
+      pinchStartX = zX; pinchStartY = zY;
+      panActive = false;
+    } else if(e.touches.length===1 && zScale>1.01){
+      panActive = true;
+      panStartClientX = e.touches[0].clientX; panStartClientY = e.touches[0].clientY;
+      panStartX0 = zX; panStartY0 = zY;
+    }
+  }, {passive:false});
+  img.addEventListener('touchmove', function(e){
+    if(e.touches.length===2 && pinchStartDist){
+      e.preventDefault();
+      const d = touchDist(e.touches[0], e.touches[1]);
+      zScale = Math.min(4, Math.max(1, pinchStartScale * (d / pinchStartDist)));
+      zApply(false);
+    } else if(e.touches.length===1 && panActive){
+      e.preventDefault();
+      zX = panStartX0 + (e.touches[0].clientX - panStartClientX);
+      zY = panStartY0 + (e.touches[0].clientY - panStartClientY);
+      zApply(false);
+    }
+  }, {passive:false});
+  img.addEventListener('touchend', function(e){
+    if(e.touches.length<2) pinchStartDist=0;
+    if(e.touches.length===0){
+      panActive=false;
+      if(zScale<1.05){ zReset(true); }
+      else document.getElementById('modalHint').style.display='none';
+    }
+  });
+})();
 
 /* 토스트 */
 let toastTimer=null;
