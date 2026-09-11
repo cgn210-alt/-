@@ -1131,19 +1131,16 @@ function zReset(withTransition){
 }
 function touchDist(t1,t2){ return Math.hypot(t1.clientX-t2.clientX, t1.clientY-t2.clientY); }
 
-/* 이미지 확대 화면에서 뒤로가기(브라우저/제스처)를 누르면 앱을 벗어나지 않고
-   이미지 확대만 닫히도록, 확대를 열 때 히스토리를 한 칸 쌓아둡니다. */
-let modalHistoryPushed = false;
+/* 이미지 확대 화면 열기/닫기 — 화면 우측 상단의 명시적인 "✕ 닫기" 버튼으로 닫습니다.
+   (예전엔 뒤로가기를 가로채려고 브라우저 히스토리를 조작했었는데, 안드로이드 크롬에서
+   탭을 여러 번 오갈 때 엉뚱한 화면으로 튀는 부작용이 있어 완전히 제거했습니다.
+   히스토리를 건드리지 않아야 뒤로가기가 원래 브라우저 동작 그대로 예측 가능하게 동작합니다.) */
 function openImage(src){
   const img = document.getElementById('modalImg');
   img.src=src;
   zReset(false);
   document.getElementById('imgModal').classList.add('show');
   document.getElementById('modalHint').style.display='block';
-  if(!modalHistoryPushed){
-    history.pushState({imgModal:true}, '', location.href);
-    modalHistoryPushed = true;
-  }
 }
 function hideImageModal(){
   zReset(false);
@@ -1151,17 +1148,7 @@ function hideImageModal(){
 }
 function closeImageModal(){
   hideImageModal();
-  if(modalHistoryPushed){
-    modalHistoryPushed = false;
-    history.back(); // 열 때 쌓아둔 히스토리를 되돌려서, 다음 뒤로가기가 정상적으로 동작하도록 정리
-  }
 }
-window.addEventListener('popstate', function(){
-  if(document.getElementById('imgModal').classList.contains('show')){
-    modalHistoryPushed = false;
-    hideImageModal();
-  }
-});
 /* 마우스 클릭(데스크톱): 탭 한 번으로 2.2배 확대 ↔ 원래대로 */
 function toggleImageZoom(e){
   e.stopPropagation();
