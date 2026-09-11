@@ -94,8 +94,10 @@
   .memberchip .mc-del{border:none;background:none;color:#c0392b;font-weight:900;cursor:pointer;font-size:12px;padding:0 2px;}
   .memberchip select{border:none;background:none;font-size:11px;color:var(--ink-soft);}
   .tb-companion{font-size:12px;color:var(--brand-deep);font-weight:700;margin:2px 0 6px;}
-  .tb-companion-edit{display:flex;align-items:center;gap:6px;margin:2px 0 6px;font-size:12px;color:var(--ink-soft);}
-  .tb-companion-edit select{padding:3px 6px;border:1px solid var(--line);border-radius:6px;font-size:12px;font-family:inherit;}
+  .tb-companion-edit{margin:4px 0 8px;font-size:12px;color:var(--ink-soft);}
+  .tb-companion-edit>label{font-weight:700;display:block;margin-bottom:4px;}
+  .tb-companion-checks{display:flex;flex-wrap:wrap;gap:4px 10px;background:#fafafb;border:1px solid var(--line);border-radius:8px;padding:6px 8px;}
+  .tb-cc-item{display:inline-flex;align-items:center;gap:3px;font-size:12px;cursor:pointer;}
   .addmini{margin-top:8px;border:1.5px dashed var(--brand);background:var(--brand-soft);color:var(--brand-deep);border-radius:10px;padding:6px 10px;font-size:12.5px;font-weight:700;cursor:pointer;}
   .busmeta{font-size:13px;color:var(--ink-soft);margin:2px 0;}
   .busmeta b{color:var(--brand-deep);}
@@ -517,23 +519,17 @@ function memberChip(target, m){
   const admin = isAdmin ? `${colorSelectHtml(target, m.row, m.color)}<button class="mc-del" onclick="adminRemoveMember('${target}', ${m.row})">✕</button>` : '';
   return `<span class="memberchip${m.leader?' leader':''}">${nameColorSpan(m)}${admin}</span>`;
 }
-/* 동행지기 — 이름마다 표시하지 않고, 팀 단위로 한 명만 별도 지정 */
-async function setTeamCompanion(team, rowStr){
-  const newRow = rowStr ? parseInt(rowStr, 10) : null;
-  const teamMembers = deployCache.teamMembers.filter(m=>m.team===team);
-  const prev = teamMembers.find(m=>m.companion);
+/* 동행지기 — 이름마다 표시하지 않고, 팀 단위 체크리스트에서 지정.
+   보통 팀당 1명이지만, 팀에 따라 여러 명을 지정할 수도 있습니다(예: 꽃단장팀). */
+async function toggleTeamCompanion(row, checked){
   try{
-    if(prev && prev.row !== newRow){
-      const r1 = await jsonp({action:'adminSetCompanion', row:prev.row, value:'false', pw:adminPw});
-      if(r1 && r1.success) prev.companion = false;
-    }
-    if(newRow){
-      const target = teamMembers.find(m=>m.row===newRow);
-      const r2 = await jsonp({action:'adminSetCompanion', row:newRow, value:'true', pw:adminPw});
-      if(r2 && r2.success && target) target.companion = true;
-    }
-    renderDeployment();
-    showToast('동행지기가 설정되었습니다.');
+    const res = await jsonp({action:'adminSetCompanion', row:row, value: checked ? 'true' : 'false', pw:adminPw});
+    if(res && res.success){
+      const m = deployCache.teamMembers.find(x=>x.row===row);
+      if(m) m.companion = checked;
+      renderDeployment();
+      showToast(checked ? '동행지기로 지정되었습니다.' : '동행지기 지정이 해제되었습니다.');
+    } else showToast(res && res.error ? res.error : '변경 실패');
   }catch(err){ showToast('네트워크 오류'); }
 }
 
@@ -593,13 +589,12 @@ function renderTeamSection(){
   document.getElementById('teamSection').innerHTML = teams.map(team=>{
     const list = sortMembers_(deployCache.teamMembers.filter(m=>m.team===team));
     const addBtn = isAdmin ? `<button class="addmini" onclick="openDeployAdd('team','', '${team}')">+ ${team} 인원 추가</button>` : '';
-    const companion = list.find(m=>m.companion);
+    const companions = list.filter(m=>m.companion);
     const companionHtml = isAdmin
-      ? `<div class="tb-companion-edit"><label>🤝 동행지기</label><select onchange="setTeamCompanion('${team}', this.value)">
-           <option value="">미지정</option>
-           ${list.map(m=>`<option value="${m.row}"${companion && companion.row===m.row?' selected':''}>${m.name}</option>`).join('')}
-         </select></div>`
-      : (companion ? `<div class="tb-companion">🤝 동행지기 : ${companion.name}</div>` : '');
+      ? `<div class="tb-companion-edit"><label>🤝 동행지기 (필요한 만큼 체크)</label><div class="tb-companion-checks">
+           ${list.map(m=>`<label class="tb-cc-item"><input type="checkbox" ${m.companion?'checked':''} onchange="toggleTeamCompanion(${m.row}, this.checked)">${m.name}</label>`).join('')}
+         </div></div>`
+      : (companions.length ? `<div class="tb-companion">🤝 동행지기 : ${companions.map(c=>c.name).join(', ')}</div>` : '');
     return `<div class="teamblock">
       <div class="tb-head"><b>${team}</b><span class="tb-count">${list.length}명</span></div>
       ${companionHtml}
