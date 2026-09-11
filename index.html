@@ -459,15 +459,16 @@ function memberChip(target, m){
 }
 
 async function loadDeployment(){
-  if(!getGasUrl()){ document.getElementById('deployApiNote').style.display='block'; return; }
-  document.getElementById('deployApiNote').style.display='none';
+  const note = document.getElementById('deployApiNote');
+  if(!getGasUrl()){ note.textContent='아직 서버 주소가 설정되지 않았습니다. 우측 상단 ⚙ 버튼을 눌러 Apps Script 배포 주소를 입력해 주세요.'; note.style.display='block'; return; }
+  note.style.display='none';
   try{
     const res = await jsonp({action:'getDeployment'});
     if(res && res.success){
       deployCache = res;
       renderDeployment();
-    } else showToast('인원배치 정보를 불러오지 못했습니다.');
-  }catch(err){ showToast('연결 실패: ' + err.message); }
+    } else { note.textContent='인원배치 정보를 불러오지 못했습니다: '+(res && res.error ? res.error : '알 수 없는 오류'); note.style.display='block'; }
+  }catch(err){ note.textContent='연결 실패: '+err.message; note.style.display='block'; }
 }
 
 function renderDeployment(){
@@ -666,13 +667,14 @@ document.getElementById('teamPick').addEventListener('click', e=>{
 document.getElementById('searchBox').addEventListener('input', renderPeople);
 
 async function loadRoster(){
-  if(!getGasUrl()){ document.getElementById('apiNote').style.display='block'; return; }
-  document.getElementById('apiNote').style.display='none';
+  const note = document.getElementById('apiNote');
+  if(!getGasUrl()){ note.textContent='아직 서버 주소가 설정되지 않았습니다. 우측 상단 ⚙ 버튼을 눌러 Apps Script 배포 주소를 입력해 주세요.'; note.style.display='block'; return; }
+  note.style.display='none';
   try{
     const res = await jsonp({action:'getRoster'});
     if(res && res.success){ rosterCache = res.people; renderPeople(); renderMasterTable(); }
-    else showToast('명단을 불러오지 못했습니다.');
-  }catch(err){ showToast('연결 실패: ' + err.message); }
+    else { note.textContent='명단을 불러오지 못했습니다: '+(res && res.error ? res.error : '알 수 없는 오류'); note.style.display='block'; }
+  }catch(err){ note.textContent='연결 실패: '+err.message; note.style.display='block'; }
 }
 
 /* 전체 출석·체험 현황표 (56명 x 전체 팀, 한눈에 보기) */
