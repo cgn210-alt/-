@@ -368,6 +368,31 @@
 <div class="toast" id="toast"></div>
 
 <script>
+/* ===================== 카카오톡 인앱 브라우저 감지 및 안내 ===================== */
+/* 카카오톡 등 인앱 브라우저에서는 구글 앱스크립트(서버) 요청이 막혀 활동체크·
+   인원배치 기능이 동작하지 않는 경우가 있어, 외부 브라우저로 전환하도록 안내합니다. */
+(function(){
+  const ua = navigator.userAgent || '';
+  if(!/kakaotalk/i.test(ua)) return;
+  const isAndroid = /android/i.test(ua);
+  const bar = document.createElement('div');
+  bar.id = 'kakaoWarnBar';
+  bar.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:200;background:#ffe066;color:#2b2b30;padding:10px 14px;font-size:12.3px;line-height:1.5;text-align:center;box-shadow:0 2px 10px rgba(0,0,0,.18);';
+  bar.innerHTML = '⚠️ 카카오톡 안에서는 출석·체크 기능이 제한됩니다.<br>' +
+    (isAndroid
+      ? '<button id="kakaoOpenExternal" style="margin-top:6px;padding:6px 14px;border:none;border-radius:8px;background:#2b2b30;color:#fff;font-weight:800;font-size:12.5px;">Chrome으로 열기</button>'
+      : '우측 하단(또는 상단) <b>공유 아이콘 → "Safari로 열기"</b>를 선택해 주세요.');
+  document.body.insertBefore(bar, document.body.firstChild);
+  requestAnimationFrame(()=>{ document.body.style.paddingTop = bar.offsetHeight + 'px'; });
+  if(isAndroid){
+    const btn = document.getElementById('kakaoOpenExternal');
+    if(btn) btn.addEventListener('click', function(){
+      const target = location.href.replace(/^https?:\/\//, '');
+      location.href = 'intent://' + target + '#Intent;scheme=https;package=com.android.chrome;end';
+    });
+  }
+})();
+
 /* ===================== 탭 전환 ===================== */
 document.querySelectorAll('.tabbtn').forEach(btn=>{
   btn.addEventListener('click', ()=>{
