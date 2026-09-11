@@ -421,8 +421,16 @@ document.querySelectorAll('.tabbtn').forEach(btn=>{
     document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
     btn.classList.add('active');
     document.getElementById('panel-'+btn.dataset.tab).classList.add('active');
-    if(btn.dataset.tab==='invite') loadRoster();
-    if(btn.dataset.tab==='deploy') loadDeployment();
+    if(btn.dataset.tab==='invite'){
+      if(!rosterCache.length) document.getElementById('peopleList').innerHTML = '<li class="prow"><div class="pinfo">⏳ 불러오는 중...</div></li>';
+      loadRoster();
+    }
+    if(btn.dataset.tab==='deploy'){
+      if(!deployCache.busInfo.length){
+        document.getElementById('busSection').innerHTML = '<p style="padding:12px 4px;color:var(--ink-soft);font-size:13px;">⏳ 불러오는 중...</p>';
+      }
+      loadDeployment();
+    }
   });
 });
 document.querySelector('.tabbtn').classList.add('active');
@@ -527,6 +535,14 @@ function renderDeployment(){
   renderTeamSection();
 }
 
+// 팀장은 맨 앞에, 나머지 인원은 가나다순으로 정렬
+function sortMembers_(list){
+  return list.slice().sort((a,b)=>{
+    if(!!a.leader !== !!b.leader) return a.leader ? -1 : 1;
+    return (a.name||'').localeCompare(b.name||'', 'ko');
+  });
+}
+
 function renderBusSection(){
   const buses = deployCache.busInfo.length ? deployCache.busInfo.map(b=>b.bus) : ['1호차','2호차'];
   document.getElementById('busSection').innerHTML = buses.map(bus=>{
@@ -534,7 +550,7 @@ function renderBusSection(){
     const members = deployCache.busMembers.filter(m=>m.bus===bus);
     const teams = [...new Set(members.map(m=>m.team))].sort((a,b)=>TEAM_ORDER.indexOf(a)-TEAM_ORDER.indexOf(b));
     const teamHtml = teams.map(team=>{
-      const list = members.filter(m=>m.team===team).sort((a,b)=>(b.leader-a.leader));
+      const list = sortMembers_(members.filter(m=>m.team===team));
       const addBtn = isAdmin ? `<button class="addmini" onclick="openDeployAdd('bus','${bus}','${team}')">+ ${team} 인원 추가</button>` : '';
       return `<div style="margin-top:8px;"><b style="font-size:13px;color:var(--brand-deep);">${team}</b>
         <div class="memberwrap" style="margin-top:4px;">${list.map(m=>memberChip('bus', m)).join('')}</div>${addBtn}</div>`;
@@ -555,7 +571,7 @@ function renderTeamSection(){
     ? [...new Set(deployCache.teamMembers.map(m=>m.team))].sort((a,b)=>TEAM_ORDER.indexOf(a)-TEAM_ORDER.indexOf(b))
     : TEAM_ORDER.filter(t=>t!=='리더십');
   document.getElementById('teamSection').innerHTML = teams.map(team=>{
-    const list = deployCache.teamMembers.filter(m=>m.team===team).sort((a,b)=>(b.leader-a.leader));
+    const list = sortMembers_(deployCache.teamMembers.filter(m=>m.team===team));
     const addBtn = isAdmin ? `<button class="addmini" onclick="openDeployAdd('team','', '${team}')">+ ${team} 인원 추가</button>` : '';
     return `<div class="teamblock">
       <div class="tb-head"><b>${team}</b><span class="tb-count">${list.length}명</span></div>
@@ -880,20 +896,56 @@ function saveSettings(){
 
 /* 이미지 확대 */
 function openImage(src){
-  document.getElementById('modalImg').src=src;
+  const img = document.getElementById('modalImg');
+  img.style.cssText=''; // 이전 확대 상태로 남아있던 인라인 스타일 초기화
+  img.src=src;
   const modal = document.getElementById('imgModal');
   modal.classList.remove('zoomed');
   modal.classList.add('show');
   document.getElementById('modalHint').style.display='block';
 }
 function closeImageModal(){
+  const img = document.getElementById('modalImg');
+  img.style.cssText='';
   document.getElementById('imgModal').classList.remove('show','zoomed');
 }
+/* 이미지 확대/축소 — width/height를 그대로 바꾸면 뚝 끊겨 보여서,
+   transform:scale()로 부드럽게 확대한 뒤 실제 크기로 자연스럽게 전환합니다. */
 function toggleImageZoom(e){
   e.stopPropagation();
   const modal = document.getElementById('imgModal');
-  modal.classList.toggle('zoomed');
-  if(modal.classList.contains('zoomed')) document.getElementById('modalHint').style.display='none';
+  const img = document.getElementById('modalImg');
+  if(img.dataset.animating === '1') return;
+  const zoomingIn = !modal.classList.contains('zoomed');
+
+  if(zoomingIn){
+    const startRect = img.getBoundingClientRect();
+    const targetW = img.naturalWidth, targetH = img.naturalHeight;
+    const scale = targetW / startRect.width;
+    img.dataset.animating = '1';
+    img.style.maxWidth='none'; img.style.maxHeight='none';
+    img.style.width=startRect.width+'px'; img.style.height=startRect.height+'px';
+    img.style.transformOrigin='center center';
+    img.style.transform='scale(1)';
+    document.getElementById('modalHint').style.display='none';
+    requestAnimationFrame(()=>{
+      requestAnimationFrame(()=>{
+        img.style.transition='transform .28s ease';
+        img.style.transform=`scale(${scale})`;
+      });
+    });
+    img.addEventListener('transitionend', function onEnd(){
+      img.removeEventListener('transitionend', onEnd);
+      img.style.transition=''; img.style.transform='';
+      img.style.width=targetW+'px'; img.style.height=targetH+'px';
+      modal.classList.add('zoomed');
+      img.dataset.animating = '0';
+    }, {once:true});
+  } else {
+    modal.classList.remove('zoomed');
+    img.style.cssText='';
+    document.getElementById('modalHint').style.display='block';
+  }
 }
 
 /* 토스트 */
