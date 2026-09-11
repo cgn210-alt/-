@@ -252,6 +252,14 @@
     <div class="card">
       <div class="card-head"><span class="dot"></span><h2>초대자(마을주민) 출석 · 방문 체크</h2></div>
       <div class="apinote" id="apiNote" style="display:none;">아직 서버 주소가 설정되지 않았습니다. 우측 상단 ⚙ 버튼을 눌러 Apps Script 배포 주소를 입력해 주세요.</div>
+      <p style="font-size:12px;color:var(--ink-soft);margin-top:-4px;">※ 보수팀을 제외한 9개 팀은 팀장만 체크할 수 있습니다. (누구나 보기는 가능)</p>
+      <div style="margin-bottom:10px;">
+        <button id="checkGateOff" class="refreshbtn" style="display:inline-flex;align-items:center;" onclick="openCheckPwLogin()">🔒 팀장 체크 권한 확인</button>
+        <span id="checkGateOn" style="display:none;align-items:center;gap:8px;">
+          <span style="color:var(--ok);font-weight:700;font-size:12.8px;">✓ 팀장 체크 권한 사용 중</span>
+          <button class="refreshbtn" onclick="exitCheckPw()">잠그기</button>
+        </span>
+      </div>
       <div class="teampick" id="teamPick"></div>
       <input class="searchbox" id="searchBox" placeholder="이름으로 검색">
       <div class="progressbar">
@@ -347,6 +355,18 @@
   <div class="row">
     <button class="cancel" onclick="closeAdminLogin()">취소</button>
     <button class="save" onclick="submitAdminLogin()">확인</button>
+  </div>
+</div>
+
+<!-- 팀장 체크 권한 바텀시트 -->
+<div class="sheet-bg" id="checkPwBg" onclick="closeCheckPwLogin()"></div>
+<div class="sheet" id="checkPwSheet">
+  <h3>🔒 팀장 체크 권한 확인</h3>
+  <p style="font-size:12.5px;color:var(--ink-soft);margin:-4px 0 8px;">팀장님께 안내받은 체크 비밀번호를 입력해 주세요.</p>
+  <input id="checkPwInput" type="text" autocomplete="off" placeholder="체크 비밀번호">
+  <div class="row">
+    <button class="cancel" onclick="closeCheckPwLogin()">취소</button>
+    <button class="save" onclick="submitCheckPwLogin()">확인</button>
   </div>
 </div>
 
@@ -754,8 +774,12 @@ document.getElementById('worshipTable').innerHTML = WORSHIP.map(w=>
 const TEAMS = ['안내팀','오병이어팀','꽃단장팀','발지압팀','추나요법팀','소망카페팀','소망놀이팀','보수팀','촬영팀','소망택배팀'];
 const TEAM_SHORT = {'오병이어팀':'오병','꽃단장팀':'꽃단','발지압팀':'발지','추나요법팀':'추나','소망카페팀':'카페','소망놀이팀':'놀이','보수팀':'보수','촬영팀':'촬영','소망택배팀':'택배','안내팀':'출석'};
 const VISIT_TEAMS = TEAMS.filter(t=>t!=='안내팀'); // 방문 체험 대상 9개 팀(안내팀=출석은 제외)
+// 체크 권한이 팀장으로 제한되는 9개 팀 (보수팀은 제외 — 보수팀은 누구나 체크 가능)
+const CHECK_RESTRICTED_TEAMS = TEAMS.filter(t=>t!=='보수팀');
 let currentTeam = TEAMS[0];
 let rosterCache = [];
+let checkPw = '';
+let isCheckUnlocked = false;
 
 // 목사·사모·이장(비고란에 표시가 있는 분들)은 원래 순서를 그대로 유지하고,
 // 그 뒤 일반 마을주민(비고란이 비어있는 분들)만 가나다순으로 정렬합니다.
@@ -888,20 +912,47 @@ function renderPeople(){
 }
 
 async function toggleCheck(row, team, btn){
+  if(!isAdmin && !isCheckUnlocked && CHECK_RESTRICTED_TEAMS.includes(team)){
+    showToast('이 팀은 팀장만 체크할 수 있습니다. 🔒 팀장 체크 권한을 먼저 확인해 주세요.');
+    return;
+  }
   const person = rosterCache.find(p=>p.row===row);
   if(!person) return;
   const cur = person.checks[team] || {checked:false};
   const next = !cur.checked;
   if(btn) btn.disabled = true;
   try{
-    const res = await jsonp({action:'setCheck', row:row, team:team, checked: next});
+    const res = await jsonp({action:'setCheck', row:row, team:team, checked: next, checkPw: checkPw});
     if(res && res.success){
       person.checks[team] = { checked: next, time: next ? new Date().toLocaleString('ko-KR') : '' };
       renderPeople();
       renderMasterTable();
-    } else showToast('저장 실패');
+    } else showToast(res && res.error ? res.error : '저장 실패');
   }catch(err){ showToast('네트워크 오류로 저장하지 못했습니다.'); }
   if(btn) btn.disabled = false;
+}
+
+/* 팀장 체크 권한 잠금/해제 */
+function openCheckPwLogin(){ document.getElementById('checkPwBg').classList.add('show'); document.getElementById('checkPwSheet').classList.add('show'); }
+function closeCheckPwLogin(){ document.getElementById('checkPwBg').classList.remove('show'); document.getElementById('checkPwSheet').classList.remove('show'); document.getElementById('checkPwInput').value=''; }
+async function submitCheckPwLogin(){
+  const pw = document.getElementById('checkPwInput').value.trim();
+  if(!pw){ showToast('비밀번호를 입력해 주세요.'); return; }
+  try{
+    const res = await jsonp({action:'checkPwVerify', pw:pw});
+    if(res && res.success){
+      checkPw = pw; isCheckUnlocked = true;
+      document.getElementById('checkGateOff').style.display='none';
+      document.getElementById('checkGateOn').style.display='inline-flex';
+      closeCheckPwLogin();
+      showToast('팀장 체크 권한이 확인되었습니다.');
+    } else showToast('비밀번호가 올바르지 않습니다.');
+  }catch(err){ showToast('네트워크 오류'); }
+}
+function exitCheckPw(){
+  isCheckUnlocked = false; checkPw = '';
+  document.getElementById('checkGateOff').style.display='inline-flex';
+  document.getElementById('checkGateOn').style.display='none';
 }
 
 /* 관리자: 명단 이름·오타 수정 */

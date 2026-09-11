@@ -16,6 +16,12 @@ var SHEET_BUSINFO = '버스정보';
 var SHEET_BUSMEMBER = '버스인원';
 var SHEET_TEAMMEMBER = '팀별인원';
 
+// 활동체크(출석·방문) 팀장 전용 비밀번호 — 관리자 비밀번호와는 별개의 가벼운 비밀번호입니다.
+// 이 비밀번호를 아는 사람만 아래 CHECK_RESTRICTED_TEAMS 팀의 체크를 할 수 있습니다.
+// (보수팀은 제외 — 보수팀은 누구나 체크 가능)
+var CHECK_PW = '팀장2026';
+var CHECK_RESTRICTED_TEAMS = ['안내팀', '오병이어팀', '꽃단장팀', '발지압팀', '추나요법팀', '소망카페팀', '소망놀이팀', '촬영팀', '소망택배팀'];
+
 var _cb = null; // JSONP callback 이름
 
 // ── GET/POST 공통 처리 ────────────────────────────────────────
@@ -27,6 +33,7 @@ function doGet(e) {
   if (action === 'getRoster')   return handleGetRoster();
   if (action === 'setCheck')    return handleSetCheck(params);
   if (action === 'addPerson')   return handleAddPerson(params);
+  if (action === 'checkPwVerify') return jsonRes({ success: checkTeamPw_(params.pw) });
   if (action === 'adminEditPerson')   return handleAdminEditPerson(params);
   if (action === 'adminDeletePerson') return handleAdminDeletePerson(params);
 
@@ -98,6 +105,11 @@ function handleGetRoster() {
 }
 
 // ── 체크 토글 (공개, 팀별 출석/방문 체크) ─────────────────────
+// 활동체크 팀장 전용 비밀번호(또는 관리자 비밀번호) 확인
+function checkTeamPw_(pw) {
+  return String(pw) === CHECK_PW || checkAdmin_(pw);
+}
+
 function handleSetCheck(params) {
   var row = parseInt(params.row || '0', 10);
   var team = String(params.team || '').trim();
@@ -105,6 +117,9 @@ function handleSetCheck(params) {
   if (!row || row < 2) return jsonRes({ success: false, error: '잘못된 행 번호' });
   var col = teamColIndex_(team);
   if (!col) return jsonRes({ success: false, error: '알 수 없는 팀' });
+  if (CHECK_RESTRICTED_TEAMS.indexOf(team) >= 0 && !checkTeamPw_(params.checkPw)) {
+    return jsonRes({ success: false, error: '이 팀은 팀장만 체크할 수 있습니다. 팀장 체크 권한을 먼저 확인해 주세요.' });
+  }
 
   var lock = LockService.getScriptLock();
   lock.waitLock(10000);
