@@ -17,6 +17,9 @@ var SHEET_BUSMEMBER = '버스인원';
 var SHEET_TEAMMEMBER = '팀별인원';
 var SHEET_TEAMROLE = '팀별역할';
 var SHEET_EVENT = '행사일정';
+var SHEET_WORSHIP = '예배순서';
+var SHEET_ATTACH = '첨부자료';
+var UPLOAD_FOLDER_NAME = '상주아웃리치_첨부파일';
 
 // 활동체크(출석·방문) 팀장 전용 비밀번호 — 관리자 비밀번호와는 별개의 가벼운 비밀번호입니다.
 // 이 비밀번호를 아는 사람만 아래 CHECK_RESTRICTED_TEAMS 팀의 체크를 할 수 있습니다.
@@ -51,6 +54,13 @@ function doGet(e) {
   if (action === 'adminEditEvent')    return handleAdminEditEvent(params);
   if (action === 'adminAddEvent')     return handleAdminAddEvent(params);
   if (action === 'adminDeleteEvent')  return handleAdminDeleteEvent(params);
+  if (action === 'getWorship')         return handleGetWorship();
+  if (action === 'adminEditWorship')   return handleAdminEditWorship(params);
+  if (action === 'adminAddWorship')    return handleAdminAddWorship(params);
+  if (action === 'adminDeleteWorship') return handleAdminDeleteWorship(params);
+  if (action === 'getAttachments')       return handleGetAttachments();
+  if (action === 'uploadFile')           return handleUploadFile(params);
+  if (action === 'adminDeleteAttachment') return handleAdminDeleteAttachment(params);
 
   return jsonRes({ success: false, error: 'unknown action' });
 }
@@ -540,6 +550,145 @@ function handleAdminDeleteEvent(p) {
   lock.waitLock(10000);
   try {
     ensureEventSheet_().deleteRow(row);
+  } finally {
+    lock.releaseLock();
+  }
+  return jsonRes({ success: true });
+}
+
+// ================================================================
+// 예배 순서("예배" 탭) — 관리자 수정·추가·삭제 가능
+// ================================================================
+function ensureWorshipSheet_() {
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var sheet = ss.getSheetByName(SHEET_WORSHIP);
+  if (!sheet) {
+    sheet = ss.insertSheet(SHEET_WORSHIP);
+    sheet.appendRow(['구분', '내용', '진행자']);
+    sheet.setFrozenRows(1);
+    var defaults = [
+      ['찬양', '주가 일하시네 / 하나님의 부르심', '이창권 순장'],
+      ['대표기도', '', '오명 대표장로'],
+      ['성경봉독', '요한복음 9장 1절~3절', '주웅현 총무'],
+      ['특순', '행복', '이창권, 주웅현'],
+      ['말씀', '한번 더 생각해보세요!', '반재복 목사'],
+      ['봉헌찬송', '내 기도하는 그 시간(찬송가 364장)', '다같이'],
+      ['축도', '', '노치형 목사']
+    ];
+    sheet.getRange(2, 1, defaults.length, 3).setValues(defaults);
+  }
+  return sheet;
+}
+function handleGetWorship() {
+  var items = sheetRows_(ensureWorshipSheet_()).map(function (r) {
+    return { row: r.row, label: r.v[0] || '', content: r.v[1] || '', presenter: r.v[2] || '' };
+  });
+  return jsonRes({ success: true, items: items });
+}
+function handleAdminEditWorship(p) {
+  if (!checkAdmin_(p.pw)) return jsonRes({ success: false, error: '비밀번호가 올바르지 않습니다.' });
+  var row = parseInt(p.row || '0', 10);
+  if (!row || row < 2) return jsonRes({ success: false, error: '잘못된 행 번호' });
+  var lock = LockService.getScriptLock();
+  lock.waitLock(10000);
+  try {
+    ensureWorshipSheet_().getRange(row, 1, 1, 3).setValues([[p.label || '', p.content || '', p.presenter || '']]);
+  } finally {
+    lock.releaseLock();
+  }
+  return jsonRes({ success: true });
+}
+function handleAdminAddWorship(p) {
+  if (!checkAdmin_(p.pw)) return jsonRes({ success: false, error: '비밀번호가 올바르지 않습니다.' });
+  var lock = LockService.getScriptLock();
+  lock.waitLock(10000);
+  var newRow;
+  try {
+    var sheet = ensureWorshipSheet_();
+    sheet.appendRow([p.label || '', p.content || '', p.presenter || '']);
+    newRow = sheet.getLastRow();
+  } finally {
+    lock.releaseLock();
+  }
+  return jsonRes({ success: true, row: newRow });
+}
+function handleAdminDeleteWorship(p) {
+  if (!checkAdmin_(p.pw)) return jsonRes({ success: false, error: '비밀번호가 올바르지 않습니다.' });
+  var row = parseInt(p.row || '0', 10);
+  if (!row || row < 2) return jsonRes({ success: false, error: '잘못된 행 번호' });
+  var lock = LockService.getScriptLock();
+  lock.waitLock(10000);
+  try {
+    ensureWorshipSheet_().deleteRow(row);
+  } finally {
+    lock.releaseLock();
+  }
+  return jsonRes({ success: true });
+}
+
+// ================================================================
+// 첨부자료(예배 탭 악보 첨부 + "기타자료" 탭) — 구글 드라이브에 저장
+// ================================================================
+function getUploadFolder_() {
+  var folders = DriveApp.getFoldersByName(UPLOAD_FOLDER_NAME);
+  if (folders.hasNext()) return folders.next();
+  return DriveApp.createFolder(UPLOAD_FOLDER_NAME);
+}
+function ensureAttachSheet_() {
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var sheet = ss.getSheetByName(SHEET_ATTACH);
+  if (!sheet) {
+    sheet = ss.insertSheet(SHEET_ATTACH);
+    sheet.appendRow(['분류', '파일명', 'URL', '종류', '설명', '업로드일시', '파일ID']);
+    sheet.setFrozenRows(1);
+  }
+  return sheet;
+}
+// ── 공개: 첨부자료 목록 불러오기 (category: 'worship_score' 또는 'other') ──
+function handleGetAttachments() {
+  var items = sheetRows_(ensureAttachSheet_()).map(function (r) {
+    return { row: r.row, category: r.v[0] || '', filename: r.v[1] || '', url: r.v[2] || '', filetype: r.v[3] || '', desc: r.v[4] || '', uploadedAt: r.v[5] || '' };
+  });
+  return jsonRes({ success: true, items: items });
+}
+// ── 관리자: 파일 업로드 (base64로 전달, 반드시 POST로 호출) ──────
+function handleUploadFile(p) {
+  if (!checkAdmin_(p.pw)) return jsonRes({ success: false, error: '비밀번호가 올바르지 않습니다.' });
+  if (!p.data || !p.filename) return jsonRes({ success: false, error: '파일 데이터가 없습니다.' });
+  var lock = LockService.getScriptLock();
+  lock.waitLock(15000);
+  try {
+    var bytes = Utilities.base64Decode(p.data);
+    var mimeType = p.mimeType || 'application/octet-stream';
+    var blob = Utilities.newBlob(bytes, mimeType, p.filename);
+    var folder = getUploadFolder_();
+    var file = folder.createFile(blob);
+    file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
+    var fileId = file.getId();
+    var isImage = mimeType.indexOf('image/') === 0;
+    var url = isImage
+      ? ('https://drive.google.com/uc?export=view&id=' + fileId)
+      : ('https://drive.google.com/file/d/' + fileId + '/view');
+    var filetype = isImage ? 'image' : (mimeType.indexOf('pdf') >= 0 ? 'pdf' : 'doc');
+    var sheet = ensureAttachSheet_();
+    sheet.appendRow([p.category || 'other', p.filename, url, filetype, p.desc || '', new Date().toLocaleString('ko-KR'), fileId]);
+  } finally {
+    lock.releaseLock();
+  }
+  return jsonRes({ success: true });
+}
+// ── 관리자: 첨부자료 삭제 (구글 드라이브 파일도 함께 휴지통으로) ──
+function handleAdminDeleteAttachment(p) {
+  if (!checkAdmin_(p.pw)) return jsonRes({ success: false, error: '비밀번호가 올바르지 않습니다.' });
+  var row = parseInt(p.row || '0', 10);
+  if (!row || row < 2) return jsonRes({ success: false, error: '잘못된 행 번호' });
+  var lock = LockService.getScriptLock();
+  lock.waitLock(10000);
+  try {
+    var sheet = ensureAttachSheet_();
+    var fileId = sheet.getRange(row, 7).getValue();
+    sheet.deleteRow(row);
+    if (fileId) { try { DriveApp.getFileById(fileId).setTrashed(true); } catch (e2) { } }
   } finally {
     lock.releaseLock();
   }
