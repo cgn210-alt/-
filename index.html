@@ -201,7 +201,6 @@
   <button class="tabbtn" data-tab="deploy">인원배치</button>
   <button class="tabbtn" data-tab="invite">활동체크</button>
   <button class="tabbtn" data-tab="worship">예배</button>
-  <button class="tabbtn" data-tab="other">기타자료</button>
 </div>
 
 <div class="wrap">
@@ -353,24 +352,6 @@
     </div>
   </div>
 
-  <!-- 기타자료 -->
-  <div class="panel" id="panel-other">
-    <div class="card">
-      <div class="card-head"><span class="dot"></span><h2>기타 참고자료</h2></div>
-      <p style="font-size:12px;color:var(--ink-soft);margin-top:-4px;">이미지·JPG·PDF·문서 등 참고자료를 모아두는 곳입니다. 이미지는 선택 시 확대되고, 문서·PDF는 눌러서 새 창에서 볼 수 있습니다.</p>
-      <div id="otherAttachList"></div>
-      <button id="otherAttachBtn" class="addpersonbtn" style="display:none;" onclick="openAttachUpload('other')">📎 자료 첨부하기</button>
-      <div class="apinote" id="otherApiNote" style="display:none;">아직 서버 주소가 설정되지 않았습니다. 우측 상단 ⚙ 버튼을 눌러 Apps Script 배포 주소를 입력해 주세요.</div>
-    </div>
-    <div class="card">
-      <div class="card-head"><span class="dot"></span><h2>⚙ 관리자</h2></div>
-      <div id="otherAdminGateOff"><button class="addpersonbtn" onclick="openAdminLogin()">🔒 관리자 모드로 편집하기</button></div>
-      <div id="otherAdminGateOn" style="display:none;">
-        <p style="font-size:12.5px;color:var(--ok);font-weight:700;">✓ 관리자 모드 (자료 첨부·삭제 가능)</p>
-        <button class="addpersonbtn" onclick="exitAdmin()">관리자 모드 종료</button>
-      </div>
-    </div>
-  </div>
 
 </div>
 
@@ -507,7 +488,7 @@
   </div>
 </div>
 
-<!-- 자료 첨부(파일 업로드) 바텀시트 (관리자, 악보 첨부 · 기타자료 공용) -->
+<!-- 자료 첨부(파일 업로드) 바텀시트 (관리자, 악보 첨부용) -->
 <div class="sheet-bg" id="attachUploadBg" onclick="closeAttachUpload()"></div>
 <div class="sheet" id="attachUploadSheet">
   <h3 id="attachUploadTitle">📎 파일 첨부</h3>
@@ -605,9 +586,6 @@ document.querySelectorAll('.tabbtn').forEach(btn=>{
     }
     if(btn.dataset.tab==='worship'){
       loadWorship();
-      loadAttachments();
-    }
-    if(btn.dataset.tab==='other'){
       loadAttachments();
     }
   });
@@ -952,8 +930,6 @@ async function submitAdminLogin(){
       document.getElementById('eventAdminGateOn').style.display='block';
       document.getElementById('worshipAdminGateOff').style.display='none';
       document.getElementById('worshipAdminGateOn').style.display='block';
-      document.getElementById('otherAdminGateOff').style.display='none';
-      document.getElementById('otherAdminGateOn').style.display='block';
       closeAdminLogin();
       showToast('관리자 모드가 켜졌습니다.');
       renderDeployment();
@@ -978,8 +954,6 @@ function exitAdmin(){
   document.getElementById('eventAdminGateOn').style.display='none';
   document.getElementById('worshipAdminGateOff').style.display='block';
   document.getElementById('worshipAdminGateOn').style.display='none';
-  document.getElementById('otherAdminGateOff').style.display='block';
-  document.getElementById('otherAdminGateOn').style.display='none';
   renderDeployment();
   renderPeople();
   renderMasterTable();
@@ -1169,13 +1143,12 @@ async function adminDeleteWorship(row){
   }catch(err){ showToast('네트워크 오류'); }
 }
 
-/* ===================== 첨부자료(악보 첨부 / 기타자료) — 구글 드라이브 업로드 ===================== */
+/* ===================== 첨부자료(악보 첨부) — 구글 드라이브 업로드 ===================== */
 let attachCache = [];
 let lastAttachLoad = 0;
-let attachUploadCategory = 'other';
+let attachUploadCategory = 'worship_score';
 function renderAttachments(){
   document.getElementById('worshipAttachBtn').style.display = isAdmin ? 'block' : 'none';
-  document.getElementById('otherAttachBtn').style.display = isAdmin ? 'block' : 'none';
 
   const scoreItems = attachCache.filter(a=>a.category==='worship_score');
   document.getElementById('scoreGalleryUploaded').innerHTML = scoreItems.map(a=>{
@@ -1183,18 +1156,6 @@ function renderAttachments(){
     if(a.filetype==='image') return `<div><img src="${a.url}" onclick="openImage(this.src)" alt="${a.filename}">${delBtn}</div>`;
     return `<div class="attach-doc"><a href="${a.url}" target="_blank" rel="noopener">📄 ${a.filename}</a>${delBtn}</div>`;
   }).join('');
-
-  const otherItems = attachCache.filter(a=>a.category==='other');
-  const note = document.getElementById('otherApiNote');
-  if(!getGasUrl()){ note.style.display='block'; document.getElementById('otherAttachList').innerHTML=''; return; }
-  note.style.display='none';
-  document.getElementById('otherAttachList').innerHTML = otherItems.map(a=>{
-    const delBtn = isAdmin ? `<button class="pmini pmini-del" onclick="adminDeleteAttachment(${a.row})">✕ 삭제</button>` : '';
-    if(a.filetype==='image'){
-      return `<div class="attach-item"><img src="${a.url}" onclick="openImage(this.src)" alt="${a.filename}"><div class="attach-meta"><b>${a.filename}</b>${a.desc?`<small>${a.desc}</small>`:''}</div>${delBtn}</div>`;
-    }
-    return `<div class="attach-item attach-doc-row"><a href="${a.url}" target="_blank" rel="noopener">📄 ${a.filename}</a>${a.desc?`<small>${a.desc}</small>`:''}${delBtn}</div>`;
-  }).join('') || '<p style="font-size:12.5px;color:var(--ink-soft);">등록된 자료가 없습니다.</p>';
 }
 async function loadAttachments(force){
   if(!force && attachCache.length && Date.now() - lastAttachLoad < 8000) return;

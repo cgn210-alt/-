@@ -651,6 +651,13 @@ function getUploadFolder_() {
   if (folders.hasNext()) return folders.next();
   return DriveApp.createFolder(UPLOAD_FOLDER_NAME);
 }
+// 수동 테스트용 — 이 함수를 편집기에서 직접 실행하면 구글 드라이브 권한
+// 승인 창이 뜹니다(파라미터가 필요 없는 함수라 목록에 정상적으로 보입니다).
+// 실제 업로드 파일이 생기는 게 아니라, 드라이브 접근 권한만 확인/승인하는 용도입니다.
+function testDrivePermission() {
+  var folder = getUploadFolder_();
+  Logger.log('구글 드라이브 접근 성공: ' + folder.getName());
+}
 function ensureAttachSheet_() {
   var ss = SpreadsheetApp.getActiveSpreadsheet();
   var sheet = ss.getSheetByName(SHEET_ATTACH);
